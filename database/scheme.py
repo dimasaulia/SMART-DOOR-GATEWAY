@@ -22,7 +22,13 @@ class Node(BaseModel):
     lastOnline = DateTimeField(null = True)
 
 class Card(BaseModel):
-    node = ForeignKeyField(Node, backref="nodes")
     cardId = CharField()
+    cardStatus = CharField()
     pin = CharField()
     isTwoStepAuth = BooleanField()
+    isBanned = BooleanField()
+
+class AccessRole(BaseModel):
+    card = ForeignKeyField(Card, backref="cards")
+    node = ForeignKeyField(Node, backref="nodes")
+

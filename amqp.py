@@ -2,7 +2,7 @@ import pika
 import json
 import os
 from datetime import datetime
-from database.scheme import Gateway, Node, Card
+from database.scheme import Gateway, Node, Card, AccessRole
 from variable import *
 # GET INFO ABOUT DEVICE
 availableGateway = Gateway.get_by_id(1)
@@ -16,30 +16,42 @@ RABIT_SETTINGS = {
     "queues": ["smartdoorgateway"],
 }
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABIT_SETTINGS["hostname"]))
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(host=RABIT_SETTINGS["hostname"]))
 
 channel = connection.channel()
 
-channel.exchange_declare(exchange=RABIT_SETTINGS["exchange"], exchange_type='direct')
+channel.exchange_declare(
+    exchange=RABIT_SETTINGS["exchange"], exchange_type='direct')
 
-result = channel.queue_declare(RABIT_SETTINGS["queues"][0], exclusive=False, durable=True)
+result = channel.queue_declare(
+    RABIT_SETTINGS["queues"][0], exclusive=False, durable=True)
 queue_name = result.method.queue
 
 print(' [*amqp]: Waiting for logs. To exit press CTRL+C ')
 print(f" [!amqp]: PID={os.getpid()}")
 Variable.setSyncPid(os.getpid())
 
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"setup.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"reset.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"setuproom.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"resetroom.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"removeroom.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"addcard.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"removecard.{gatewayShortId}.gateway")
-channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name, routing_key=f"updatecard.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
+                   queue=queue_name, routing_key=f"setup.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
+                   queue=queue_name, routing_key=f"reset.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
+                   routing_key=f"setuproom.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
+                   routing_key=f"resetroom.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
+                   routing_key=f"removeroom.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
+                   queue=queue_name, routing_key=f"addcard.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
+                   routing_key=f"removecard.{gatewayShortId}.gateway")
+channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
+                   routing_key=f"updatecard.{gatewayShortId}.gateway")
 
 node_DB = Node.select().dicts()
 devices = []
+
 
 def callback(ch, method, properties, body):
     action = method.routing_key.split(".")[0]
@@ -48,37 +60,51 @@ def callback(ch, method, properties, body):
     if action == "addcard":
         print(" [!amqp]: NEW CARD HAS BEEND ADDED")
         node = Node.get(Node.shortId == payloadObj["duid"])
-        Card.create(node=node, cardId=payloadObj["cardNumber"], pin=payloadObj["cardPin"], isTwoStepAuth=payloadObj["isTwoStepAuth"])
+        try:
+            card = Card.get(Card.cardId == payloadObj["cardNumber"])
+        except:
+            card = Card.create(cardId=payloadObj["cardNumber"], pin=payloadObj["cardPin"],
+                               isTwoStepAuth=payloadObj["isTwoStepAuth"], cardStatus=payloadObj["cardStatus"], isBanned=payloadObj["isBanned"])
+
+        AccessRole.create(card=card, node=node)
+
         availableGateway.lastSync = payloadObj["createdAt"]
         availableGateway.save()
 
     if action == "removecard":
         print(" [!amqp]: REMOVE CARD")
         node = Node.get(Node.shortId == payloadObj["duid"])
-        Card.delete().where(Card.node == node.id, Card.cardId == payloadObj["cardNumber"]).execute()
+        try:
+            card = Card.get(Card.cardId == payloadObj["cardNumber"])
+            AccessRole.delete().where(AccessRole.node == node.id,
+                                      AccessRole.card == card.id).execute()
+        except:
+            print(" [!amqp]: CANT FIND CARD")
         availableGateway.lastSync = payloadObj["createdAt"]
         availableGateway.save()
-    
+
     if action == "updatecard":
         print(" [!amqp]: UPDATE CARD")
-        Card.update(cardId=payloadObj["cardNumber"], pin=payloadObj["cardPin"], isTwoStepAuth=payloadObj["isTwoStepAuth"]).where(Card.cardId == payloadObj["cardNumber"]).execute()
-        pass
+        Card.update(cardId=payloadObj["cardNumber"], pin=payloadObj["cardPin"], isTwoStepAuth=payloadObj["isTwoStepAuth"],
+                    cardStatus=payloadObj["cardStatus"], isBanned=payloadObj["isBanned"]).where(Card.cardId == payloadObj["cardNumber"]).execute()
 
     if action == "setuproom":
-        Node.update(buildingName=payloadObj["name"]).where(Node.shortId == payloadObj["device_id"]).execute()
+        Node.update(buildingName=payloadObj["name"]).where(
+            Node.shortId == payloadObj["device_id"]).execute()
 
     if action == "resetroom":
-        Node.update(buildingName=None, lastOnline=None).where(Node.shortId == payloadObj["device_id"]).execute()
+        Node.update(buildingName=None, lastOnline=None).where(
+            Node.shortId == payloadObj["device_id"]).execute()
 
     if action == "removeroom":
         Node.delete().where(Node.shortId == payloadObj["device_id"]).execute()
 
-    if action == "setup": # setup gateway
+    if action == "setup":  # setup gateway
         availableGateway.name = payloadObj["name"]
         availableGateway.lastSync = payloadObj["createdAt"]
         availableGateway.save()
 
-    if action == "reset": # reset gateway
+    if action == "reset":  # reset gateway
         availableGateway.name = None
         availableGateway.lastSync = None
         availableGateway.save()
@@ -86,7 +112,8 @@ def callback(ch, method, properties, body):
 
     print(" [!amqp]: %r:%r" % (method.routing_key, body))
 
-channel.basic_consume(queue=RABIT_SETTINGS["queues"][0], on_message_callback=callback, auto_ack=True)
+
+channel.basic_consume(
+    queue=RABIT_SETTINGS["queues"][0], on_message_callback=callback, auto_ack=True)
 
 channel.start_consuming()
-
