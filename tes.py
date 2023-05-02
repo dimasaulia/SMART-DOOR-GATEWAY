@@ -1,3 +1,2 @@
-from database.scheme import Gateway, Node, Card
-
-Card.create(node="bisGi", cardId='payloadObj["cardNumber"]', pin='payloadObj["cardPin"]').execute()
+from database.scheme import Node, Card, AccessRole, Gateway
+thisGateway = Gateway.get_by_id(1).shortId

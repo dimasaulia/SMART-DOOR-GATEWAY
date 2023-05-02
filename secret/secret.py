@@ -5,10 +5,10 @@ from database.scheme import Credential
 
 load_dotenv()
 datas = Credential.select().dicts()
-API_ID  = ""
+API_ID = ""
 API_KEY = ""
 
-if(len(datas)):
+if (len(datas)):
     API_ID = datas[0]["apiID"]
     API_KEY = datas[0]["apiKey"]
 

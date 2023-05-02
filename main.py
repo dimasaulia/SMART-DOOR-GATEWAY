@@ -736,7 +736,6 @@ class App(customtkinter.CTk):
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
         # loginFrame = LoginFrames(master=self,fg_color="transparent")
         # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-
         self.sideBarFrame = SideBarFrames(
             master=self, width=100, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
         self.sideBarFrame.grid(row=0, column=0, padx=[
