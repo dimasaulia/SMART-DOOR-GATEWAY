@@ -6,6 +6,8 @@ import json
 import subprocess
 import platform
 import psutil
+import serial
+import serial.tools.list_ports
 from threading import Thread
 from signal import SIGBREAK, SIGINT, signal
 from datetime import datetime, timedelta, timezone
@@ -239,10 +241,15 @@ class SideBarFrames(customtkinter.CTkFrame):
                                                   anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.syncButton))
         self.syncButton.grid(row=2, column=0, padx=10, pady=20, sticky="w")
 
+        self.networkButtonIcon = Util.imageGenerator("icon_mesh.png")
+        self.networkButton = customtkinter.CTkButton(master=self, text="Network", font=("Quicksand Bold", 12), image=self.networkButtonIcon,
+                                                     anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.networkButton))
+        self.networkButton.grid(row=4, column=0, padx=10, pady=20, sticky="w")
+
         self.settingButtonIcon = Util.imageGenerator("icon_settings.png")
         self.settingButton = customtkinter.CTkButton(master=self, text="Setting", font=("Quicksand Bold", 12), image=self.settingButtonIcon,
                                                      anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.settingButton))
-        self.settingButton.grid(row=4, column=0, padx=10, pady=20, sticky="w")
+        self.settingButton.grid(row=5, column=0, padx=10, pady=20, sticky="w")
 
     def widgetOnClick(self, item):
         for child in self.winfo_children():
@@ -265,6 +272,11 @@ class SideBarFrames(customtkinter.CTkFrame):
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
                                1], destinationFrame=SyncFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20)
 
+        if state == "Network":
+            print(" [!main]: Render Network Frame")
+            Util.frameSwitcher(originFrame=self.master.winfo_children()[
+                               1], destinationFrame=NetworkFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
+
         if state == "Setting":
             print(" [!main]: Render Setting Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
@@ -275,6 +287,15 @@ class HomeFrames(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
+        nodeCount = Node.select().count()
+        cardCount = Card.select().count()
+        lastSync = Gateway.get_by_id(1).lastSync
+        lastSyncDate = str(Gateway.get_by_id(1).lastSync).split("T")[0]
+        lastSyncHour = str(Gateway.get_by_id(1).lastSync).split("T")[
+            1].split(":")[0]
+        lastSyncminutes = str(Gateway.get_by_id(
+            1).lastSync).split("T")[1].split(":")[1]
+        lastSyncTime = f"{lastSyncHour}.{lastSyncminutes}"
         master.grid_columnconfigure(1, weight=40)
         self.grid_propagate(False)
         self.grid_rowconfigure(0, weight=1)
@@ -303,7 +324,7 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=[0, 30], sticky="nwne")
         self.nodeFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.nodeFrame, font=(
-            "Quicksand Bold", 100), text="10", fg_color="transparent")
+            "Quicksand Bold", 100), text=nodeCount, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
             master=self.nodeFrame, font=("Quicksand SemiBold", 18), text="Smart Door Node")
         self.nodeFrameDescription = customtkinter.CTkLabel(
@@ -318,11 +339,11 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=30, sticky="nwne")
         self.syncFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.syncFrame, font=(
-            "Quicksand Bold", 70), text="23:55", fg_color="transparent")
+            "Quicksand Bold", 70), text=lastSyncTime, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
             master=self.syncFrame, font=("Quicksand SemiBold", 18), text="Last Sync")
         self.nodeFrameDescription = customtkinter.CTkLabel(
-            master=self.syncFrame, font=("Quicksand Light", 18), text="20 March 2023")
+            master=self.syncFrame, font=("Quicksand Light", 18), text=lastSyncDate)
         self.nodeFrameTitle.place(relx=0.05, rely=0.1)
         self.nodeFrameCount.place(relx=0.05, rely=0.17)
         self.nodeFrameDescription.place(relx=0.05, rely=0.675)
@@ -333,7 +354,7 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=[30, 0], sticky="nwne")
         self.cardFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.cardFrame, font=(
-            "Quicksand Bold", 100), text="17", fg_color="transparent")
+            "Quicksand Bold", 100), text=cardCount, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
             master=self.cardFrame, font=("Quicksand SemiBold", 18), text="Accapted Card")
         self.nodeFrameDescription = customtkinter.CTkLabel(
@@ -478,6 +499,88 @@ class RoomFrames(customtkinter.CTkFrame):
     def startSync(self):
         print("  [!main]:  Start Sync")
         os.system("py amqp.py")
+
+
+class NetworkFrames(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        master.grid_columnconfigure(1, weight=40)
+        self.grid_propagate(False)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+
+        # DEVICE LIST
+        self.deviceListFrame = customtkinter.CTkScrollableFrame(
+            master=self, fg_color=Util.COLOR_NEUTRAL_1,  corner_radius=Util.CORNER_RADIUS)
+        self.deviceListFrame.grid(row=0, column=0, sticky="nswe", padx=[0, 20])
+        self.deviceListLabel = customtkinter.CTkLabel(
+            master=self.deviceListFrame, text="Mesh AP Port", font=("Quicksand SemiBold", 20))
+        self.deviceListLabel.pack(anchor="w")
+        self.devices = []
+
+        # LIST ALL AVAILABLE PORT
+        ports = serial.tools.list_ports.comports()
+        portsList = []
+        portsListForUserInterface = []
+        for port in ports:
+            portsList.append(str(port))
+            if platform.system() == "Windows":
+                portsListForUserInterface.append(str(port).split(" - ")[0])
+
+            if platform.system() == "Linux":
+                pass
+
+        # DISPLAY ALL AVAILABLE PORT
+        for port in portsListForUserInterface:
+            self.itemContainer(port)
+
+        # DEVICE DETAIL
+        self.deviceDetailFrame = customtkinter.CTkScrollableFrame(
+            master=self, fg_color=Util.COLOR_NEUTRAL_1,  corner_radius=Util.CORNER_RADIUS)
+        self.deviceDetailFrame.grid(row=0, column=1, sticky="nswe", padx=20)
+        self.deviceDetailLabel = customtkinter.CTkLabel(
+            master=self.deviceDetailFrame, text="Network Status", font=("Quicksand SemiBold", 20))
+        self.deviceDetailLabel.pack(anchor="w")
+
+    def itemContainer(self, title):
+        self.nodeItemContainer = customtkinter.CTkFrame(
+            master=self.deviceListFrame, height=50, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        self.nodeItemContainer.pack(
+            anchor="center", fill="both", padx=[0, 10], pady=10)
+        self.nodeItemLabel = customtkinter.CTkLabel(
+            master=self.nodeItemContainer, text=f"{title}", font=("Quicksand", 16), pady=0)
+        self.nodeItemLabel.place(relx=0.1, rely=0.17, anchor="nw")
+        # CEK APAKAH PORT YANG DITUJU SUDAH AKTIF DAN MEMILIKI PID
+        port_pid = Variable.getPortAuthDaemonPID(title)
+        # JIKA TERDAPAT PID AKTIF MAKA BUTTON MENAMPILKAN TULISAN STATUS
+        if port_pid:
+            statusPid = psutil.pid_exists(port_pid)
+            if (statusPid):
+                self.nodeButton = customtkinter.CTkButton(master=self.nodeItemContainer, text="Status", image=Util.imageGenerator(
+                    "icon_arrow.png", 10), width=30, compound="right", hover=False, font=("Quicksand SemiBold", 14), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS, command=lambda: self.startConnectionOnClick(title[-1]))
+            if (not statusPid):
+                port_pid = False
+
+        # JIKA TIDAK TERDAPAT PID AKTIF MAKA BUTTON MENAMPILKAN TULISAN START
+        if port_pid == False:
+            self.nodeButton = customtkinter.CTkButton(master=self.nodeItemContainer, text="Start", image=Util.imageGenerator(
+                "icon_arrow.png", 10), width=30, compound="right", hover=False, font=("Quicksand SemiBold", 14), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS, command=lambda: self.startConnectionOnClick(title))
+        self.nodeButton.place(relx=0.9, rely=0.23, anchor="ne")
+
+    def startConnectionOnClick(self, port):
+        networkThread = Thread(target=lambda: self.startConnection(port))
+        networkThread.start()
+
+    def startConnection(self, port):
+        if platform.system() == "Windows":
+            subprocess.call(
+                f'start /wait python ./serialWorker.py {port[-1]}', shell=True)
+
+        if platform.system() == "Linux":
+            pass
 
 
 class SyncFrames(customtkinter.CTkFrame):
