@@ -55,3 +55,24 @@ class Variable():
         except:
             PORT_PID = False
         return PORT_PID
+
+    @staticmethod
+    def getAllNetworkCredential():
+        VARIABLE_DATA = Variable.readFile()
+        return VARIABLE_DATA["networkCredential"]
+
+    @staticmethod
+    def getPortNetwrokCredential(port):
+        VARIABLE_DATA = Variable.readFile()
+        PORT_PID = None
+        try:
+            PORT_PID = VARIABLE_DATA["networkCredential"][port]
+        except:
+            PORT_PID = False
+        return PORT_PID
+
+    @staticmethod
+    def setNetwrokCredential(port, data):
+        VARIABLE_DATA = Variable.readFile()
+        VARIABLE_DATA["networkCredential"][port] = (data)
+        Variable.writeFile(VARIABLE_DATA)

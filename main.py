@@ -536,14 +536,15 @@ class NetworkFrames(customtkinter.CTkFrame):
         # DISPLAY ALL AVAILABLE PORT
         for port in portsListForUserInterface:
             self.itemContainer(port)
+        # self.itemContainer("COM5")
 
-        # DEVICE DETAIL
-        self.deviceDetailFrame = customtkinter.CTkScrollableFrame(
+        # NETWORK DETAIL
+        self.networkDetailFrame = customtkinter.CTkScrollableFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1,  corner_radius=Util.CORNER_RADIUS)
-        self.deviceDetailFrame.grid(row=0, column=1, sticky="nswe", padx=20)
-        self.deviceDetailLabel = customtkinter.CTkLabel(
-            master=self.deviceDetailFrame, text="Network Status", font=("Quicksand SemiBold", 20))
-        self.deviceDetailLabel.pack(anchor="w")
+        self.networkDetailFrame.grid(row=0, column=1, sticky="nswe", padx=20)
+        self.networkDetailLabel = customtkinter.CTkLabel(
+            master=self.networkDetailFrame, text="Network Status", font=("Quicksand SemiBold", 20))
+        self.networkDetailLabel.pack(anchor="w")
 
     def itemContainer(self, title):
         self.nodeItemContainer = customtkinter.CTkFrame(
@@ -560,15 +561,61 @@ class NetworkFrames(customtkinter.CTkFrame):
             statusPid = psutil.pid_exists(port_pid)
             if (statusPid):
                 self.nodeButton = customtkinter.CTkButton(master=self.nodeItemContainer, text="Status", image=Util.imageGenerator(
-                    "icon_arrow.png", 10), width=30, compound="right", hover=False, font=("Quicksand SemiBold", 14), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS, command=lambda: self.startConnectionOnClick(title[-1]))
+                    "icon_arrow.png", 10), width=30, compound="right", hover=False, font=("Quicksand SemiBold", 14), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS, command=lambda: self.portOnClick(title))
             if (not statusPid):
                 port_pid = False
 
         # JIKA TIDAK TERDAPAT PID AKTIF MAKA BUTTON MENAMPILKAN TULISAN START
         if port_pid == False:
             self.nodeButton = customtkinter.CTkButton(master=self.nodeItemContainer, text="Start", image=Util.imageGenerator(
-                "icon_arrow.png", 10), width=30, compound="right", hover=False, font=("Quicksand SemiBold", 14), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS, command=lambda: self.startConnectionOnClick(title))
+                "icon_arrow.png", 10), width=30, compound="right", hover=False, font=("Quicksand SemiBold", 14), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS, command=lambda: self.portOnClick(title))
         self.nodeButton.place(relx=0.9, rely=0.23, anchor="ne")
+
+    def networkDetailTemplate(self, title, desc):
+        self.networkItemFrame = customtkinter.CTkFrame(
+            master=self.networkDetailFrame, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        self.networkItemFrame.pack(
+            anchor="w", fill="both", padx=[0, 10], pady=10)
+        self.roomDetailTitle = customtkinter.CTkLabel(
+            master=self.networkItemFrame, text=title, font=("Quicksand", 16))
+        self.roomDetailTitle.pack(anchor="w", padx=[20, 0], pady=[10, 0])
+        self.roomDetailDescription = customtkinter.CTkLabel(
+            master=self.networkItemFrame, text=desc, font=("Quicksand Bold", 24))
+        self.roomDetailDescription.pack(anchor="w", padx=[20, 0], pady=[0, 20])
+
+    def portOnClick(self, port):
+        # REMOVE PREVIUS CONTENT
+        self.networkFrameToRemove = self.networkDetailFrame.winfo_children()[
+            1::]
+        for frame in self.networkFrameToRemove:
+            Util.frameDestroyer(frame)
+
+        # GET PID
+        authPid = Variable.getPortAuthDaemonPID(port)
+        if (authPid):
+            statusPid = psutil.pid_exists(authPid)
+        else:
+            statusPid = False
+
+        # TRYING START CONNECTION IF NO ONE DAEMON STARTED YET
+        if (statusPid == False):
+            self.startConnectionOnClick(port)
+
+        # GET PORT INFO
+        availableData = Variable.getPortNetwrokCredential(port)
+
+        # DISPLAY INFORMATION
+        if (availableData):
+            self.networkDetailTemplate("MESH SSID", availableData["SSID"])
+            self.networkDetailTemplate(
+                "MESH PASSWORD", availableData["PASSWORD"])
+            self.networkDetailTemplate(
+                "GATEWAY NAME", availableData["GATEWAY"])
+            self.networkDetailTemplate("LAST SEEN", "DAEMON ID")
+            self.meshDaemonStatus = customtkinter.CTkButton(
+                master=self.networkDetailFrame, text="Daemon Status", command=lambda: self.checkAuthDaemon(port), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, height=40, font=("Quicksand SemiBold", 16))
+            self.meshDaemonStatus.pack(anchor="center",
+                                       padx=[0, 10], pady=[0, 20], fill="x")
 
     def startConnectionOnClick(self, port):
         networkThread = Thread(target=lambda: self.startConnection(port))
@@ -577,10 +624,21 @@ class NetworkFrames(customtkinter.CTkFrame):
     def startConnection(self, port):
         if platform.system() == "Windows":
             subprocess.call(
-                f'start /wait python ./serialWorker.py {port[-1]}', shell=True)
+                f'start /wait python ./serialWorker.py {port[-1]}', shell=True)  # only take port number if in windows
 
         if platform.system() == "Linux":
             pass
+
+    def checkAuthDaemon(self, port):
+        authPid = Variable.getPortAuthDaemonPID(port)
+        statusPid = psutil.pid_exists(authPid)
+        if (statusPid):
+            Toast(master=self.master, color=Util.COLOR_GREEN_1,
+                  errMsg="ESP Mesh Auth Service Running")
+
+        if (statusPid == False):
+            Toast(master=self.master, color=Util.COLOR_RED_1,
+                  errMsg="ESP Mesh Auth Service Stop")
 
 
 class SyncFrames(customtkinter.CTkFrame):
@@ -837,7 +895,7 @@ class App(customtkinter.CTk):
         self.minsize(1024, 600)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        # loginFrame = LoginFrames(master=self,fg_color="transparent")
+        # loginFrame = LoginFrames(master=self, fg_color="transparent")
         # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
         self.sideBarFrame = SideBarFrames(
             master=self, width=100, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
