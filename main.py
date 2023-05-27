@@ -290,11 +290,13 @@ class HomeFrames(customtkinter.CTkFrame):
         nodeCount = Node.select().count()
         cardCount = Card.select().count()
         lastSync = Gateway.get_by_id(1).lastSync
-        lastSyncDate = str(Gateway.get_by_id(1).lastSync).split("T")[0]
-        lastSyncHour = str(Gateway.get_by_id(1).lastSync).split("T")[
-            1].split(":")[0]
-        lastSyncminutes = str(Gateway.get_by_id(
-            1).lastSync).split("T")[1].split(":")[1]
+        formatedDate = datetime.fromisoformat(
+            lastSync).astimezone(timezone(timedelta(hours=7)))
+        syncDate = f"{formatedDate.date()} {formatedDate.hour}:{formatedDate.minute}"
+
+        lastSyncDate = formatedDate.date()
+        lastSyncHour = formatedDate.hour
+        lastSyncminutes = formatedDate.minute
         lastSyncTime = f"{lastSyncHour}.{lastSyncminutes}"
         master.grid_columnconfigure(1, weight=40)
         self.grid_propagate(False)
@@ -678,7 +680,7 @@ class SyncFrames(customtkinter.CTkFrame):
         self.gatewayTitle.pack(anchor="w", padx=20, pady=15)
         self.syncDetailTemplate("Gateway Spot Name", f"{gatewayName}")
         self.syncDetailTemplate("Last Card Sync", f"{syncDate}")
-        self.gatewayButton = customtkinter.CTkButton(master=self.syncSettingFrame, text="Syncy Now", font=("Quicksand Bold", 18), image=Util.imageGenerator(
+        self.gatewayButton = customtkinter.CTkButton(master=self.syncSettingFrame, text="Sync Now", font=("Quicksand Bold", 18), image=Util.imageGenerator(
             "icon_sync.png"), compound="right", fg_color=Util.COLOR_NEUTRAL_2, hover_color=Util.COLOR_BLUE_1, corner_radius=Util.CORNER_RADIUS, command=self.syncOnClick)
         self.gatewayButton.pack(
             anchor="center", fill="both", padx=20, pady=15, ipady=10)
@@ -714,6 +716,11 @@ class SyncFrames(customtkinter.CTkFrame):
                     AccessRole.create(card=card, node=node)
 
                     # Card.create(node=node, cardId=data["card_number"], pin=data["pin"], isTwoStepAuth=data["isTwoStepAuth"])
+            availableGateway = Gateway.get_by_id(1)
+            current_date = datetime.now()
+            availableGateway.lastSync = current_date.isoformat()
+            availableGateway.save()
+
             Toast(master=self.master, color=Util.COLOR_GREEN_1,
                   errMsg="Success Syncy Card Data")
 
