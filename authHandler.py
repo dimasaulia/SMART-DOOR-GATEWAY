@@ -65,7 +65,7 @@ def cardAuth(payload):
     except CustomException as ex:
         resp = {
             "success": False,
-            "types": "auth",
+            "type": "auth",
             "message": str(ex),
             "source": sourceObj["destination"],
             "destination": sourceObj["source"],

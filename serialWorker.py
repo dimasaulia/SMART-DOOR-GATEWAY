@@ -93,6 +93,13 @@ while True:
                 networkCredential = setupNetwork()
                 serialDebug.write(bytes(f"{str(networkCredential)}", 'utf-8'))
 
+            if (serialString.startswith("__CHECK_AUTH_SERVICE")):
+                authService = {
+                    "type": "service",
+                }
+                serialDebug.write(bytes(f"{str(authService)}", 'utf-8'))
+                print(f"[G]: Auth Service Available")
+
     except KeyboardInterrupt:
         print("Handling interrupt...")
         break

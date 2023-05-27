@@ -21,14 +21,14 @@ def updateNodeOnlineTime(payload):
         node.save()
         resp = {
             "success": True,
-            "types": "connectionping",
+            "type": "connectionping",
             "message": f"New Online Set To {iso_time}",
         }
         return (json.dumps(resp))
     except CustomException as ex:
         resp = {
             "success": False,
-            "types": "connectionping",
+            "type": "connectionping",
             "message": str(ex),
         }
         return (json.dumps(resp))
