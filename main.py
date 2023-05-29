@@ -8,7 +8,8 @@ import platform
 import psutil
 import serial
 import serial.tools.list_ports
-from threading import Thread
+import time
+from threading import Thread, Event, Timer
 from signal import SIGBREAK, SIGINT, signal
 from datetime import datetime, timedelta, timezone
 from database.scheme import Credential, Gateway, Node, Card, AccessRole, db
@@ -24,6 +25,13 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 
+def millis():
+    date = datetime.utcnow() - datetime(1970, 1, 1)
+    seconds = (date.total_seconds())
+    milliseconds = round(seconds*1000)
+    return milliseconds
+
+
 class Util():
     def __init__(self):
         pass
@@ -32,6 +40,8 @@ class Util():
         os.path.realpath(__file__)), "static")
 
     URL = "http://localhost:8000"
+    APP_WIDTH = 1024
+    APP_HEIGHT = 600
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -96,7 +106,7 @@ class LoginFrames(customtkinter.CTkFrame):
                                                      hover=False, compound="right", command=lambda: Util.frameSwitcher(originFrame=self, destinationFrame=ApiFormFrames, master=master))
         self.settingButton.place(relx=1, rely=0, anchor="ne")
         self.formFrame = customtkinter.CTkFrame(
-            master=self, fg_color="transparent")
+            master=self, fg_color=Util.COLOR_TRANSPARENT)
         self.formFrame.place(relx=0.5, rely=0.5, anchor="center")
 
         self.usernameLabel = customtkinter.CTkLabel(
@@ -171,7 +181,7 @@ class LoginFrames(customtkinter.CTkFrame):
     def redirectPage(self):
         Util.frameDestroyer(self)
         self.sideBarFrame = SideBarFrames(
-            master=self.master, width=100, fg_color="#29283D")
+            master=self.master, fg_color="#29283D")
         self.sideBarFrame.grid(row=0, column=0, padx=[
                                20, 0], pady=20, sticky="nwsw")
 
@@ -238,6 +248,9 @@ class ApiFormFrames(customtkinter.CTkFrame):
 class SideBarFrames(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.stopEvent = Event()
+        self.t = Timer(30*60, self.autoLogout, ())
+        self.t.start()
 
         self.master = master
         master.grid_rowconfigure(0, weight=1)  # configure grid system
@@ -247,7 +260,7 @@ class SideBarFrames(customtkinter.CTkFrame):
                                                   anchor="w", fg_color=Util.COLOR_BLUE_1, hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.homeButton))
         self.homeButton.grid(row=0, column=0, padx=10, pady=20, sticky="w")
         self.homeFrame = HomeFrames(
-            master=master, fg_color=Util.COLOR_TRANSPARENT)
+            master=self.master, fg_color=Util.COLOR_TRANSPARENT)
         self.homeFrame.grid(row=0, column=1, padx=[
                             0, 20], pady=20, sticky="nsew")
 
@@ -271,12 +284,19 @@ class SideBarFrames(customtkinter.CTkFrame):
                                                      anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.settingButton))
         self.settingButton.grid(row=5, column=0, padx=10, pady=20, sticky="w")
 
+        self.logoutButtonIcon = Util.imageGenerator("icon_settings.png")
+        self.logoutButton = customtkinter.CTkButton(master=self, text="Logout", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.settingButtonIcon,
+                                                    anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.logoutButton))
+        self.logoutButton.grid(row=6, column=0, padx=10, pady=20, sticky="w")
+
     def widgetOnClick(self, item):
         for child in self.winfo_children():
             child.configure(fg_color="transparent")
         item.configure(fg_color=Util.COLOR_BLUE_1)
-
         state = item.cget("text")
+        self.t.cancel()
+        self.t = Timer(15, self.autoLogout, ())
+        self.t.start()
         if state == "Home":
             print(" [!main]: Render Home Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
@@ -301,6 +321,20 @@ class SideBarFrames(customtkinter.CTkFrame):
             print(" [!main]: Render Setting Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
                                1], destinationFrame=SettingFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
+
+        if state == "Logout":
+            print(" [!main]: Logout")
+            self.logoutRedirect()
+            self.stopEvent.set()
+
+    def autoLogout(self):
+        self.logoutRedirect()
+
+    def logoutRedirect(self):
+        self.t.cancel()
+        Util.frameSwitcher(originFrame=self.master.winfo_children()[
+            1], destinationFrame=LoginFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
+        Util.frameDestroyer(self.master.winfo_children()[0])
 
 
 class HomeFrames(customtkinter.CTkFrame):
@@ -897,15 +931,16 @@ class Toast(customtkinter.CTkFrame):
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-        self.geometry("1024x600")
+        self.geometry(f"{Util.APP_WIDTH}x{Util.APP_HEIGHT}")
         self.title("Smart Door App")
-        self.minsize(1024, 600)
+        self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        # loginFrame = LoginFrames(master=self, fg_color="transparent")
+        # loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
         # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+
         self.sideBarFrame = SideBarFrames(
-            master=self, width=100, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+            master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
         self.sideBarFrame.grid(row=0, column=0, padx=[
                                20, 0], pady=20, sticky="nwsw")
 
@@ -913,6 +948,4 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
     app = App()
     mainApp = Thread(target=app.mainloop())
-    # app.mainloop()
     mainApp.start()
-    # mainApp.join()
