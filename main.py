@@ -57,19 +57,35 @@ class Util():
     COLOR_NEUTRAL_5 = "#ECF0F1"
     COLOR_TRANSPARENT = "transparent"
     CORNER_RADIUS = 15
-    FONT = DotDict({
-        "Light": "Quicksand Light",
-        "Regular": "Quicksand",
-        "SemiBold": "Quicksand SemiBold",
-        "Bold": "Quicksand Bold",
-        "SIZE": DotDict({
-            "Small": 12,
-            "Regular": 16,
-            "Large": 22,
-            "ExtraLarge": 40,
-            "SuperLarge": 100,
+    OS = platform.system()
+    if OS == "Linux":
+        FONT = DotDict({
+            "Light": "Quicksand Light",
+            "Regular": "Quicksand",
+            "SemiBold": "Quicksand SemiBold",
+            "Bold": "Quicksand Bold",
+            "SIZE": DotDict({
+                "Small": 12,
+                "Regular": 16,
+                "Large": 22,
+                "ExtraLarge": 40,
+                "SuperLarge": 100,
+            })
         })
-    })
+    if OS == "Windows":
+        FONT = DotDict({
+            "Light": "Quicksand Light",
+            "Regular": "Quicksand",
+            "SemiBold": "Quicksand SemiBold",
+            "Bold": "Quicksand Bold",
+            "SIZE": DotDict({
+                "Small": 12,
+                "Regular": 16,
+                "Large": 22,
+                "ExtraLarge": 40,
+                "SuperLarge": 100,
+            })
+        })
 
     @staticmethod
     def frameDestroyer(fr):
@@ -249,8 +265,8 @@ class SideBarFrames(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.stopEvent = Event()
-        self.t = Timer(30*60, self.autoLogout, ())
-        self.t.start()
+        # self.t = Timer(30*60, self.autoLogout, ())
+        # self.t.start()
 
         self.master = master
         master.grid_rowconfigure(0, weight=1)  # configure grid system
@@ -269,10 +285,15 @@ class SideBarFrames(customtkinter.CTkFrame):
                                                   anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.roomButton))
         self.roomButton.grid(row=1, column=0, padx=10, pady=20, sticky="w")
 
+        self.cardButtonIcon = Util.imageGenerator("icon_card.png")
+        self.cardButton = customtkinter.CTkButton(master=self, text="Card", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.cardButtonIcon,
+                                                  anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.cardButton))
+        self.cardButton.grid(row=2, column=0, padx=10, pady=20, sticky="w")
+
         self.syncButtonIcon = Util.imageGenerator("icon_sync.png")
         self.syncButton = customtkinter.CTkButton(master=self, text="Sync", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.syncButtonIcon,
                                                   anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.syncButton))
-        self.syncButton.grid(row=2, column=0, padx=10, pady=20, sticky="w")
+        self.syncButton.grid(row=3, column=0, padx=10, pady=20, sticky="w")
 
         self.networkButtonIcon = Util.imageGenerator("icon_mesh.png")
         self.networkButton = customtkinter.CTkButton(master=self, text="Network", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.networkButtonIcon,
@@ -284,8 +305,8 @@ class SideBarFrames(customtkinter.CTkFrame):
                                                      anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.settingButton))
         self.settingButton.grid(row=5, column=0, padx=10, pady=20, sticky="w")
 
-        self.logoutButtonIcon = Util.imageGenerator("icon_settings.png")
-        self.logoutButton = customtkinter.CTkButton(master=self, text="Logout", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.settingButtonIcon,
+        self.logoutButtonIcon = Util.imageGenerator("logout.png")
+        self.logoutButton = customtkinter.CTkButton(master=self, text="Logout", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.logoutButtonIcon,
                                                     anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.logoutButton))
         self.logoutButton.grid(row=6, column=0, padx=10, pady=20, sticky="w")
 
@@ -294,9 +315,9 @@ class SideBarFrames(customtkinter.CTkFrame):
             child.configure(fg_color="transparent")
         item.configure(fg_color=Util.COLOR_BLUE_1)
         state = item.cget("text")
-        self.t.cancel()
-        self.t = Timer(15, self.autoLogout, ())
-        self.t.start()
+        # self.t.cancel()
+        # self.t = Timer(15, self.autoLogout, ())
+        # self.t.start()
         if state == "Home":
             print(" [!main]: Render Home Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
@@ -322,6 +343,11 @@ class SideBarFrames(customtkinter.CTkFrame):
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
                                1], destinationFrame=SettingFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
 
+        if state == "Card":
+            print(" [!main]: Render Card Frame")
+            Util.frameSwitcher(originFrame=self.master.winfo_children()[
+                               1], destinationFrame=CardFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
+
         if state == "Logout":
             print(" [!main]: Logout")
             self.logoutRedirect()
@@ -331,7 +357,7 @@ class SideBarFrames(customtkinter.CTkFrame):
         self.logoutRedirect()
 
     def logoutRedirect(self):
-        self.t.cancel()
+        # self.t.cancel()
         Util.frameSwitcher(originFrame=self.master.winfo_children()[
             1], destinationFrame=LoginFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
         Util.frameDestroyer(self.master.winfo_children()[0])
@@ -553,8 +579,12 @@ class RoomFrames(customtkinter.CTkFrame):
         syncThread.start()
 
     def startSync(self):
-        print("  [!main]:  Start Sync")
-        os.system("py amqp.py")
+        print(" [!main]: Start Sync")
+        if platform.system() == "Windows":
+            subprocess.call('start /wait python ./amqp.py', shell=True)
+
+        if platform.system() == "Linux":
+            pass
 
 
 class NetworkFrames(customtkinter.CTkFrame):
@@ -806,7 +836,7 @@ class SyncFrames(customtkinter.CTkFrame):
     def startSync(self):
         print(" [!main]: Start Sync")
         if platform.system() == "Windows":
-            subprocess.call('start /wait python ./amqp.py', shell=True)
+            subprocess.call("start /wait python ./amqp.py", shell=True)
 
         if platform.system() == "Linux":
             pass
@@ -901,6 +931,78 @@ class SettingFrames(customtkinter.CTkFrame):
             Credential.create(apiID=apiId, apiKey=apiKey)
             Toast(master=self.master, color=Util.COLOR_GREEN_1,
                   errMsg="Success Save Data")
+
+
+class CardFrames(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        master.grid_columnconfigure(1, weight=40)
+        self.grid_propagate(False)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=4)
+
+        self.credentialFrame = customtkinter.CTkFrame(
+            master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
+        self.credentialFrame.grid(
+            row=0, column=0, sticky="nswe", padx=[0, 20])
+        self.credentialLabel = customtkinter.CTkLabel(
+            master=self.credentialFrame, text="Card Registration", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w")
+        self.credentialLabel.pack(anchor="w", fill="both",
+                                  padx=[20, 20], pady=10)
+
+        self.cardIdLabel = customtkinter.CTkLabel(
+            master=self.credentialFrame, text="CARD ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+        self.cardIdLabel.pack(anchor="w",
+                              padx=[20, 20], pady=0)
+        self.cardIdForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Card ID will appear here when card detected",
+                                                 fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
+        self.cardIdForm.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
+        self.cardIdForm.configure(state="disable")
+
+        self.cardPinLabel = customtkinter.CTkLabel(
+            master=self.credentialFrame, text="CARD PIN", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+        self.cardPinLabel.pack(anchor="w", padx=[20, 20], pady=0)
+        self.cardPinForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Optional to proivde card pin",
+                                                  fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, width=350)
+        self.cardPinForm.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
+
+        self.cardOwnerLabel = customtkinter.CTkLabel(
+            master=self.credentialFrame, text="CARD OWNER", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+        self.cardOwnerLabel.pack(anchor="w", padx=[20, 20], pady=0)
+        self.cardOwnerForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Optional to proivde card owner (username)",
+                                                    fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, width=350)
+        self.cardOwnerForm.pack(anchor="w", fill="both",
+                                padx=[20, 20], pady=10)
+
+        self.submitButton = customtkinter.CTkButton(master=self.credentialFrame, width=350, height=45, text="Save", fg_color=Util.COLOR_GREEN_1,
+                                                    hover_color=Util.COLOR_GREEN_2, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), command=self.saveOnClick)
+        self.submitButton.pack(anchor="w", padx=[20, 20], pady=10, fill="both")
+
+        self.aboutFrame = customtkinter.CTkFrame(
+            master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
+        self.aboutFrame.grid(
+            row=0, column=1, sticky="nswe", padx=[0, 0])
+        self.aboutLabel = customtkinter.CTkLabel(
+            master=self.aboutFrame, text="Instruction", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
+        self.aboutLabel.pack(anchor="w", fill="both",
+                             padx=[20, 20], pady=10)
+        self.information("1. Please tap your card on RFID Reader")
+        self.information(
+            "2. If you want activate two step authentication, please fill PIN form")
+        self.information(
+            "3. If you want pair card with user please provide username")
+        self.information("4. Save Your Data")
+
+    def information(self, text):
+        self.informationLabel = customtkinter.CTkLabel(
+            master=self.aboutFrame, text=text, wraplength=300, justify="left", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0, anchor="w", width=350)
+        self.informationLabel.pack(anchor="w", fill="both",
+                                   padx=[20, 20], pady=0)
+
+    def saveOnClick(self):
+        pass
 
 
 class Toast(customtkinter.CTkFrame):
