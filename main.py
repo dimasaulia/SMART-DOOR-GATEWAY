@@ -39,7 +39,7 @@ class Util():
     image_path = os.path.join(os.path.dirname(
         os.path.realpath(__file__)), "static")
 
-    URL = "http://localhost:8000"
+    URL = "http://192.168.226.130:8000"
     APP_WIDTH = 1024
     APP_HEIGHT = 600
     COLOR_BLUE_1 = "#1481B8"
@@ -60,10 +60,10 @@ class Util():
     OS = platform.system()
     if OS == "Linux":
         FONT = DotDict({
-            "Light": "Quicksand Light",
-            "Regular": "Quicksand",
-            "SemiBold": "Quicksand SemiBold",
-            "Bold": "Quicksand Bold",
+            "Light": "Cantarell Thin",
+            "Regular": "Cantarell",
+            "SemiBold": "Cantarell SemiBold",
+            "Bold": "Cantarell Extra Bold",
             "SIZE": DotDict({
                 "Small": 12,
                 "Regular": 16,
@@ -108,6 +108,22 @@ class Util():
                 os.path.join(Util.image_path, fileName)))
         return icon
 
+    @staticmethod
+    def startScript(pythonScript):
+        if platform.system() == "Windows":
+            subprocess.call(f"start /wait python {pythonScript}", shell=True)
+
+        if platform.system() == "Linux":
+            subprocess.Popen(f"lxterminal -e 'bash -c \"source ./venv/bin/activate && python {pythonScript}; exec bash\"'", shell=True)
+
+    @staticmethod
+    def stopScript(pid):
+        if platform.system() == "Windows":
+            os.kill(pid, SIGINT)
+
+        if platform.system() == "Linux":
+            subprocess.run(["kill","-9", str(pid) ])
+
 
 class LoginFrames(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
@@ -126,16 +142,16 @@ class LoginFrames(customtkinter.CTkFrame):
         self.formFrame.place(relx=0.5, rely=0.5, anchor="center")
 
         self.usernameLabel = customtkinter.CTkLabel(
-            master=self.formFrame, text="Username", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.formFrame, text="Username", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5)
         self.usernameLabel.grid(row=0, column=0, sticky="w", pady=[0, 10])
         self.usernameForm = customtkinter.CTkEntry(master=self.formFrame, width=500, height=50, placeholder_text="Please Input Your Username",
-                                                   fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
+                                                   fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, text_color=Util.COLOR_NEUTRAL_5)
         self.usernameForm.grid(row=1, column=0, sticky="w")
         self.passwordLabel = customtkinter.CTkLabel(
-            master=self.formFrame, text="Password", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.formFrame, text="Password", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5)
         self.passwordLabel.grid(row=2, column=0, pady=[20, 10], sticky="w")
         self.passwordForm = customtkinter.CTkEntry(master=self.formFrame, width=500, height=50, placeholder_text="Please Input Your Password",
-                                                   show="*", fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
+                                                   show="*", fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, text_color=Util.COLOR_NEUTRAL_5)
         self.passwordForm.grid(row=3, column=0, sticky="w")
         self.submitButton = customtkinter.CTkButton(master=self.formFrame, width=500, height=45, text="Login", command=self.fetchLogin,
                                                     fg_color=Util.COLOR_BLUE_1, hover_color=Util.COLOR_BLUE_2, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, 16))
@@ -222,16 +238,16 @@ class ApiFormFrames(customtkinter.CTkFrame):
         self.formFrame.place(relx=0.5, rely=0.5, anchor="center")
 
         self.apiIdLabel = customtkinter.CTkLabel(
-            master=self.formFrame, text="API ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.formFrame, text="API ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5)
         self.apiIdLabel.grid(row=0, column=0, sticky="w", pady=[0, 10])
         self.apiIdForm = customtkinter.CTkEntry(master=self.formFrame, width=500, height=50, placeholder_text="Please Input API ID",
-                                                fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
+                                                fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, text_color=Util.COLOR_NEUTRAL_5)
         self.apiIdForm.grid(row=1, column=0, sticky="w")
         self.apiKeyLabel = customtkinter.CTkLabel(
-            master=self.formFrame, text="API Key", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.formFrame, text="API Key", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5)
         self.apiKeyLabel.grid(row=2, column=0, pady=[20, 10], sticky="w")
         self.apiKeyForm = customtkinter.CTkEntry(master=self.formFrame, width=500, height=50, placeholder_text="Please Input API Key",
-                                                 fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
+                                                 fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, text_color=Util.COLOR_NEUTRAL_5)
         self.apiKeyForm.grid(row=3, column=0, sticky="w")
         self.submitButton = customtkinter.CTkButton(master=self.formFrame, width=500, height=45, text="Save", command=self.saveOnClick,
                                                     fg_color=Util.COLOR_BLUE_1, hover_color=Util.COLOR_BLUE_2, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
@@ -374,8 +390,13 @@ class HomeFrames(customtkinter.CTkFrame):
         lastSyncDate = None
         lastSyncHour = None
         if (lastSync):
-            formatedDate = datetime.fromisoformat(
-                lastSync).astimezone(timezone(timedelta(hours=7)))
+            # execpetion for linux
+            try:
+                formatedDate = datetime.fromisoformat(
+                    lastSync).astimezone(timezone(timedelta(hours=7)))
+            except:
+                formatedDate = datetime.fromisoformat(
+                    lastSync.replace('Z', '+00:00')).astimezone(timezone(timedelta(hours=7)))
             syncDate = f"{formatedDate.date()} {formatedDate.hour}:{formatedDate.minute}"
             lastSyncDate = formatedDate.date()
             lastSyncHour = formatedDate.hour
@@ -401,11 +422,11 @@ class HomeFrames(customtkinter.CTkFrame):
         self.headerFrame.grid_rowconfigure(0, weight=1)
         self.headerFrame.grid_rowconfigure(1, weight=1)
         self.appTitle = customtkinter.CTkLabel(master=self.headerFrame, font=(
-            Util.FONT.Bold, Util.FONT.SIZE.ExtraLarge), text="Smart Door Gateway Device")
-        self.appTitle.place(relx=0.02, rely=0.01)
+            Util.FONT.Bold, Util.FONT.SIZE.ExtraLarge), fg_color=Util.COLOR_TRANSPARENT, text="Smart Door Gateway Device", text_color=Util.COLOR_NEUTRAL_5)
+        self.appTitle.pack(anchor="w", pady=20, padx=[10, 10])
         self.appDescription = customtkinter.CTkLabel(master=self.headerFrame, anchor="w", justify="left", font=(
-            Util.FONT.Regular, Util.FONT.SIZE.Regular), wraplength=600, text="The gateway device is the authentication center hardware for the smart door node. This device will store user card data, as well as be used to register user cards.")
-        self.appDescription.place(relx=0.02, rely=0.25)
+            Util.FONT.Regular, Util.FONT.SIZE.Regular), wraplength=600, text_color=Util.COLOR_NEUTRAL_5,text="The gateway device is the authentication center hardware for the smart door node. This device will store user card data, as well as be used to register user cards.")
+        self.appDescription.pack(anchor="w", pady=[0,40], padx=[10, 10])
 
         self.nodeFrame = customtkinter.CTkFrame(
             master=self, height=200, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
@@ -413,14 +434,14 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=[0, 30], sticky="nwne")
         self.nodeFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.nodeFrame, font=(
-            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge), text=nodeCount, fg_color="transparent")
+            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge),text_color=Util.COLOR_NEUTRAL_5, text=nodeCount, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
-            master=self.nodeFrame, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Smart Door Node")
+            master=self.nodeFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Smart Door Node")
         self.nodeFrameDescription = customtkinter.CTkLabel(
-            master=self.nodeFrame, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text="Linked Device")
-        self.nodeFrameTitle.place(relx=0.05, rely=0.1)
-        self.nodeFrameCount.place(relx=0.05, rely=0.05)
-        self.nodeFrameDescription.place(relx=0.05, rely=0.675)
+            master=self.nodeFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text="Linked Device")
+        self.nodeFrameTitle.pack(anchor="w", pady=[20,0], padx=[20, 10])
+        self.nodeFrameCount.pack(anchor="w", pady=[0,0], padx=[20, 10])
+        self.nodeFrameDescription.pack(anchor="w", pady=[0,20], padx=[20, 10])
 
         self.syncFrame = customtkinter.CTkFrame(
             master=self, height=200, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
@@ -428,14 +449,14 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=30, sticky="nwne")
         self.syncFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.syncFrame, font=(
-            Util.FONT.Bold, Util.FONT.SIZE.ExtraLarge + 30), text=lastSyncTime, fg_color="transparent")
+            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge), text_color=Util.COLOR_NEUTRAL_5, text=lastSyncTime, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
-            master=self.syncFrame, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Last Sync")
+            master=self.syncFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Last Sync")
         self.nodeFrameDescription = customtkinter.CTkLabel(
-            master=self.syncFrame, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text=lastSyncDate)
-        self.nodeFrameTitle.place(relx=0.05, rely=0.1)
-        self.nodeFrameCount.place(relx=0.05, rely=0.17)
-        self.nodeFrameDescription.place(relx=0.05, rely=0.675)
+            master=self.syncFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text=lastSyncDate)
+        self.nodeFrameTitle.pack(anchor="w", pady=[20,0], padx=[20, 10])
+        self.nodeFrameCount.pack(anchor="w", pady=[0,0], padx=[20, 10])
+        self.nodeFrameDescription.pack(anchor="w", pady=[0,20], padx=[20, 10])
 
         self.cardFrame = customtkinter.CTkFrame(
             master=self, height=200, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
@@ -443,14 +464,14 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=[30, 0], sticky="nwne")
         self.cardFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.cardFrame, font=(
-            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge), text=cardCount, fg_color="transparent")
+            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge), text_color=Util.COLOR_NEUTRAL_5, text=cardCount, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
-            master=self.cardFrame, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Accapted Card")
+            master=self.cardFrame, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5, text="Accapted Card")
         self.nodeFrameDescription = customtkinter.CTkLabel(
-            master=self.cardFrame, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text="Card")
-        self.nodeFrameTitle.place(relx=0.05, rely=0.1)
-        self.nodeFrameCount.place(relx=0.05, rely=0.05)
-        self.nodeFrameDescription.place(relx=0.05, rely=0.675)
+            master=self.cardFrame, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5, text="Card")
+        self.nodeFrameTitle.pack(anchor="w", pady=[20,0], padx=[20, 10])
+        self.nodeFrameCount.pack(anchor="w", pady=[0,0], padx=[20, 10])
+        self.nodeFrameDescription.pack(anchor="w", pady=[0,20], padx=[20, 10])
 
 
 class RoomFrames(customtkinter.CTkFrame):
@@ -469,7 +490,7 @@ class RoomFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1, width=230, corner_radius=Util.CORNER_RADIUS)
         self.deviceListFrame.grid(row=0, column=0, sticky="nswe", padx=[0, 20])
         self.deviceListLabel = customtkinter.CTkLabel(
-            master=self.deviceListFrame, text="Node List", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+            master=self.deviceListFrame, text_color=Util.COLOR_NEUTRAL_5, text="Node List", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.deviceListLabel.pack(anchor="w")
         self.button = customtkinter.CTkButton(master=self.deviceListFrame, command=self.addNewNodeOnClick, text="Create New Node", image=Util.imageGenerator(
             "icon_plus.png", 20), corner_radius=Util.CORNER_RADIUS, compound="right", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2)
@@ -492,7 +513,7 @@ class RoomFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1, width=250, corner_radius=Util.CORNER_RADIUS)
         self.deviceDetailFrame.grid(row=0, column=1, sticky="nswe", padx=20)
         self.deviceDetailLabel = customtkinter.CTkLabel(
-            master=self.deviceDetailFrame, text="Node Detail", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+            master=self.deviceDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text="Node Detail", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.deviceDetailLabel.pack(anchor="w")
 
         # DEVICE CARD
@@ -500,7 +521,7 @@ class RoomFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1, width=230, corner_radius=Util.CORNER_RADIUS)
         self.cardFrame.grid(row=0, column=2, sticky="nswe", padx=[20, 0])
         self.cardLabel = customtkinter.CTkLabel(
-            master=self.cardFrame, text="Accaptable Card", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+            master=self.cardFrame, text_color=Util.COLOR_NEUTRAL_5, text="Accaptable Card", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.cardLabel.pack(anchor="w")
 
     def itemContainer(self, title):
@@ -509,7 +530,7 @@ class RoomFrames(customtkinter.CTkFrame):
         self.nodeItemContainer.pack(
             anchor="center", fill="both", padx=[0, 10], pady=10)
         self.nodeItemLabel = customtkinter.CTkLabel(
-            master=self.nodeItemContainer, text=f"{title}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
+            master=self.nodeItemContainer, text_color=Util.COLOR_NEUTRAL_5, text=f"{title}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
         self.nodeItemLabel.place(relx=0.1, rely=0.17, anchor="nw")
         self.nodeButton = customtkinter.CTkButton(master=self.nodeItemContainer, command=lambda: self.roomDetailOnClick(title), text="Detail", image=Util.imageGenerator(
             "icon_arrow.png", 10), width=30, compound="right", hover=False, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Small), fg_color=Util.COLOR_GREEN_1, corner_radius=Util.CORNER_RADIUS)
@@ -521,10 +542,10 @@ class RoomFrames(customtkinter.CTkFrame):
         self.roomDetailFrame.pack(
             anchor="w", fill="both", padx=[0, 10], pady=10)
         self.roomDetailTitle = customtkinter.CTkLabel(
-            master=self.roomDetailFrame, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
+            master=self.roomDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
         self.roomDetailTitle.pack(anchor="w", padx=[20, 0], pady=[20, 0])
         self.roomDetailDescription = customtkinter.CTkLabel(
-            master=self.roomDetailFrame, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
+            master=self.roomDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
         self.roomDetailDescription.pack(anchor="w", padx=[20, 0], pady=[0, 40])
 
     def cardDetailTemplate(self, title):
@@ -533,7 +554,7 @@ class RoomFrames(customtkinter.CTkFrame):
         self.cardDetailFrame.pack(
             anchor="w", fill="both", padx=[0, 10], pady=10)
         self.cardDetailTitle = customtkinter.CTkLabel(
-            master=self.cardDetailFrame, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
+            master=self.cardDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
         self.cardDetailTitle.pack(anchor="w", padx=[20, 0], pady=10)
 
     def addNewNodeOnClick(self):
@@ -567,8 +588,14 @@ class RoomFrames(customtkinter.CTkFrame):
         nodeName = node_DB.buildingName if node_DB.buildingName != None else "Not Link"
         lastOnline = ""
         if node_DB.lastOnline != None:
-            formatedDate = datetime.fromisoformat(
-                node_DB.lastOnline).astimezone(timezone(timedelta(hours=7)))
+            # execpetion for linux
+            try:
+                formatedDate = datetime.fromisoformat(
+                    node_DB.lastOnline).astimezone(timezone(timedelta(hours=7)))
+            except:
+                formatedDate = datetime.fromisoformat(
+                    node_DB.lastOnline).replace('Z', '+00:00').astimezone(timezone(timedelta(hours=7)))
+
             lastOnline = f"{formatedDate.date()} {formatedDate.hour}:{formatedDate.minute}"
         else:
             lastOnline = "Offline"
@@ -752,8 +779,16 @@ class SyncFrames(customtkinter.CTkFrame):
         gatewayName = availableData.name if availableData.name != None else "Not Linked"
         syncDate = ""
         if availableData.lastSync != None:
-            formatedDate = datetime.fromisoformat(
-                availableData.lastSync).astimezone(timezone(timedelta(hours=7)))
+            # execpetion for linux
+            try:
+                print("WIND")
+                formatedDate = datetime.fromisoformat(
+                    availableData.lastSync).astimezone(timezone(timedelta(hours=7)))
+            except:
+                print("LINUX")
+                formatedDate = datetime.fromisoformat(
+                    availableData.lastSync.replace('Z', '+00:00')).astimezone(timezone(timedelta(hours=7)))
+
             syncDate = f"{formatedDate.date()} {formatedDate.hour}:{formatedDate.minute}"
         else:
             syncDate = "Not Sync"
@@ -769,13 +804,13 @@ class SyncFrames(customtkinter.CTkFrame):
         self.syncSettingFrame.grid(
             row=0, column=0, sticky="nswe", padx=[0, 20])
         self.syncLabel = customtkinter.CTkLabel(
-            master=self.syncSettingFrame, text="Gateway Sync", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), anchor="w")
+            master=self.syncSettingFrame, text_color=Util.COLOR_NEUTRAL_5, text="Gateway Sync", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), anchor="w")
         self.syncLabel.pack(anchor="w", fill="both", padx=[20, 180], pady=10)
         self.gatewayFrame = customtkinter.CTkFrame(
             master=self.syncSettingFrame, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
         self.gatewayFrame.pack(anchor="w", fill="both", padx=20, pady=10)
         self.gatewayTitle = customtkinter.CTkLabel(
-            master=self.gatewayFrame, text=f"Gateway ID: {gatewayShortId}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
+            master=self.gatewayFrame, text_color=Util.COLOR_NEUTRAL_5, text=f"Gateway ID: {gatewayShortId}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
         self.gatewayTitle.pack(anchor="w", padx=20, pady=15)
         self.syncDetailTemplate("Gateway Spot Name", f"{gatewayName}")
         self.syncDetailTemplate("Last Card Sync", f"{syncDate}")
@@ -809,10 +844,10 @@ class SyncFrames(customtkinter.CTkFrame):
             master=self.syncSettingFrame, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
         self.syncDetailFrame.pack(anchor="w", fill="both", padx=20, pady=10)
         self.syncDetailTitle = customtkinter.CTkLabel(
-            master=self.syncDetailFrame, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
+            master=self.syncDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
         self.syncDetailTitle.pack(anchor="w", padx=[20, 0], pady=[20, 0])
         self.syncDetailDescription = customtkinter.CTkLabel(
-            master=self.syncDetailFrame, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
+            master=self.syncDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
         self.syncDetailDescription.pack(anchor="w", padx=[20, 0], pady=[0, 30])
 
     def syncOnClick(self):
@@ -849,20 +884,17 @@ class SyncFrames(customtkinter.CTkFrame):
 
     def startSync(self):
         print(" [!main]: Start Sync")
-        if platform.system() == "Windows":
-            statusPid = psutil.pid_exists(Variable.syncPid())
-            if (not statusPid):
-                subprocess.call("start /wait python ./amqp.py", shell=True)
-            if (statusPid):
-                Toast(master=self.master, color=Util.COLOR_GREEN_1,
-                      errMsg="Service Already Running")
+        statusPid = psutil.pid_exists(Variable.syncPid())
+        if (not statusPid):
+            Util.startScript("./amqp.py")
+        if (statusPid):
+            Toast(master=self.master, color=Util.COLOR_GREEN_1,
+                    errMsg="Service Already Running")
 
-        if platform.system() == "Linux":
-            pass
 
     def stopSync(self):
         print(" [!main]: Stop Sync")
-        os.kill(Variable.syncPid(), SIGINT)
+        Util.stopScript(Variable.syncPid())
 
     def checkSync(self):
         syncPid = Variable.syncPid()
@@ -1027,7 +1059,7 @@ class CardFrames(customtkinter.CTkFrame):
 class Toast(customtkinter.CTkFrame):
     count = 0
 
-    def __init__(self, master, errMsg, color, **kwargs):
+    def __init__(self, master, errMsg, color, text_color = Util.COLOR_NEUTRAL_5, **kwargs):
 
         Toast.count += 1
         self.marginY = [100, 10] if Toast.count <= 1 else [10, 10]
@@ -1036,7 +1068,7 @@ class Toast(customtkinter.CTkFrame):
         self.pack(anchor="n", pady=self.marginY)
 
         self.errorLabel = customtkinter.CTkLabel(
-            master=self, text=errMsg, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
+            master=self, text=errMsg, font=(Util.FONT.Bold, Util.FONT.SIZE.Large), text_color=text_color)
         self.errorLabel.place(relx=0.05, rely=0.48, anchor="w")
 
         self.closeButton = customtkinter.CTkButton(master=self, text="", image=Util.imageGenerator(
@@ -1057,13 +1089,13 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
-        loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        # loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
+        # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        # self.sideBarFrame = SideBarFrames(
-        #     master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
-        # self.sideBarFrame.grid(row=0, column=0, padx=[
-        #                        20, 0], pady=20, sticky="nwsw")
+        self.sideBarFrame = SideBarFrames(
+            master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        self.sideBarFrame.grid(row=0, column=0, padx=[
+                               20, 0], pady=20, sticky="nwsw")
 
 
 if __name__ == "__main__":
