@@ -93,6 +93,8 @@ def callback(ch, method, properties, body):
             Node.shortId == payloadObj["device_id"]).execute()
 
     if action == "resetroom":
+        node = Node.get(Node.shortId == payloadObj["device_id"])
+        AccessRole.delete().where(AccessRole.node_id == node.id).execute()
         Node.update(buildingName=None, lastOnline=None).where(
             Node.shortId == payloadObj["device_id"]).execute()
 
