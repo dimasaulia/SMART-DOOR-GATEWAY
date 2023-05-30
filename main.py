@@ -10,7 +10,7 @@ import serial
 import serial.tools.list_ports
 import time
 from threading import Thread, Event, Timer
-from signal import SIGBREAK, SIGINT, signal
+from signal import SIGINT, signal
 from datetime import datetime, timedelta, timezone
 from database.scheme import Credential, Gateway, Node, Card, AccessRole, db
 from secret.secret import header
@@ -690,7 +690,7 @@ class NetworkFrames(customtkinter.CTkFrame):
         else:
             statusPid = False
 
-        # TRYING START CONNECTION IF NO ONE DAEMON STARTED YET
+        # TRYING START CONNECTION IF NO DAEMON STARTED YET
         if (statusPid == False):
             self.startConnectionOnClick(port)
 
@@ -709,10 +709,17 @@ class NetworkFrames(customtkinter.CTkFrame):
                 master=self.networkDetailFrame, text="Daemon Status", command=lambda: self.checkAuthDaemon(port), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
             self.meshDaemonStatus.pack(anchor="center",
                                        padx=[0, 10], pady=[0, 20], fill="x")
+            self.meshDaemonStop = customtkinter.CTkButton(
+                master=self.networkDetailFrame, text="Stop Daemon", command=lambda: self.stopConnectionOnClick(port), fg_color=Util.COLOR_RED_1, hover_color=Util.COLOR_RED_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
+            self.meshDaemonStop.pack(anchor="center",
+                                     padx=[0, 10], pady=[0, 20], fill="x")
 
     def startConnectionOnClick(self, port):
         networkThread = Thread(target=lambda: self.startConnection(port))
         networkThread.start()
+
+    def stopConnectionOnClick(self, port):
+        os.kill(Variable.getPortAuthDaemonPID(port), SIGINT)
 
     def startConnection(self, port):
         if platform.system() == "Windows":
@@ -843,7 +850,12 @@ class SyncFrames(customtkinter.CTkFrame):
     def startSync(self):
         print(" [!main]: Start Sync")
         if platform.system() == "Windows":
-            subprocess.call("start /wait python ./amqp.py", shell=True)
+            statusPid = psutil.pid_exists(Variable.syncPid())
+            if (not statusPid):
+                subprocess.call("start /wait python ./amqp.py", shell=True)
+            if (statusPid):
+                Toast(master=self.master, color=Util.COLOR_GREEN_1,
+                      errMsg="Service Already Running")
 
         if platform.system() == "Linux":
             pass
