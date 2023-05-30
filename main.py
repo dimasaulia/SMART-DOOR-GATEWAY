@@ -370,14 +370,21 @@ class HomeFrames(customtkinter.CTkFrame):
         nodeCount = Node.select().count()
         cardCount = Card.select().count()
         lastSync = Gateway.get_by_id(1).lastSync
-        formatedDate = datetime.fromisoformat(
-            lastSync).astimezone(timezone(timedelta(hours=7)))
-        syncDate = f"{formatedDate.date()} {formatedDate.hour}:{formatedDate.minute}"
+        lastSyncTime = None
+        lastSyncDate = None
+        lastSyncHour = None
+        if (lastSync):
+            formatedDate = datetime.fromisoformat(
+                lastSync).astimezone(timezone(timedelta(hours=7)))
+            syncDate = f"{formatedDate.date()} {formatedDate.hour}:{formatedDate.minute}"
+            lastSyncDate = formatedDate.date()
+            lastSyncHour = formatedDate.hour
+            lastSyncminutes = formatedDate.minute
+            lastSyncTime = f"{lastSyncHour}.{lastSyncminutes}"
+        if (not lastSync):
+            lastSyncTime = f"~"
+            lastSyncDate = "Not Sync yet"
 
-        lastSyncDate = formatedDate.date()
-        lastSyncHour = formatedDate.hour
-        lastSyncminutes = formatedDate.minute
-        lastSyncTime = f"{lastSyncHour}.{lastSyncminutes}"
         master.grid_columnconfigure(1, weight=40)
         self.grid_propagate(False)
         self.grid_rowconfigure(0, weight=1)
@@ -1038,13 +1045,13 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        # loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
-        # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
+        loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        self.sideBarFrame = SideBarFrames(
-            master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
-        self.sideBarFrame.grid(row=0, column=0, padx=[
-                               20, 0], pady=20, sticky="nwsw")
+        # self.sideBarFrame = SideBarFrames(
+        #     master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        # self.sideBarFrame.grid(row=0, column=0, padx=[
+        #                        20, 0], pady=20, sticky="nwsw")
 
 
 if __name__ == "__main__":
