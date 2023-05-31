@@ -20,48 +20,53 @@ for port in ports:
 
 selectedPort = sys.argv[1]
 
-if platform.system() == "Windows":
-    print(
-        f"Mesh Netwrok And Authentication Start On COM{selectedPort}, Waiting For Request")
-    serialDebug = serial.Serial(port=f'COM{selectedPort}', baudrate=115200,
-                                bytesize=8, parity="N", stopbits=serial.STOPBITS_TWO, timeout=1)
-    print(f"[COM{selectedPort}]: PID={os.getpid()}")
-    Variable.setAuthDaemonPID(f"COM{selectedPort}", os.getpid())
+print(
+    f"Mesh Netwrok And Authentication Start On {selectedPort}, Waiting For Request")
+serialDebug = serial.Serial(port=f'{selectedPort}', baudrate=115200,
+                            bytesize=8, parity="N", stopbits=serial.STOPBITS_TWO, timeout=1)
+print(f"{selectedPort} => PID={os.getpid()}")
+Variable.setAuthDaemonPID(f"{selectedPort}", os.getpid())
+# if platform.system() == "Windows":
 
-if platform.system() == "Linux":
-    pass
+# if platform.system() == "Linux":
+#     print(
+#         f"Mesh Netwrok And Authentication Start On {selectedPort}, Waiting For Request")   
+#     serialDebug = serial.Serial(port=f'{selectedPort}', baudrate=115200,
+#                                 bytesize=8, parity="N", stopbits=serial.STOPBITS_TWO, timeout=1)
+#     print(f"{selectedPort}: PID={os.getpid()}")
+
 
 
 def setupNetwork():
-    if platform.system() == "Windows":
-        # GET NETWORK CREDENTIAL BASE ON PORT
-        networkDetail = Variable.getPortNetwrokCredential(f"COM{selectedPort}")
-        allNetworkDetail = Variable.getAllNetworkCredential()
-        credentialToSend = {}
+    # if platform.system() == "Windows":
+    # GET NETWORK CREDENTIAL BASE ON PORT
+    networkDetail = Variable.getPortNetwrokCredential(f"{selectedPort}")
+    allNetworkDetail = Variable.getAllNetworkCredential()
+    credentialToSend = {}
 
-        # JIKA BELUM ADA MAKA BUAT
-        if networkDetail == False:
-            ssid = f"MN-GATEWAY-{gatewayShortId}-{len(allNetworkDetail)+1}"
-            password = get_random_string(8)
-            gateway = f"GATEWAY-{gatewayShortId}"
-            credentialToSend["SSID"] = ssid
-            credentialToSend["PASSWORD"] = password
-            credentialToSend["GATEWAY"] = gateway
-            Variable.setNetwrokCredential(
-                f"COM{selectedPort}", credentialToSend)
+    # JIKA BELUM ADA MAKA BUAT
+    if networkDetail == False:
+        ssid = f"MN-GATEWAY-{gatewayShortId}-{len(allNetworkDetail)+1}"
+        password = get_random_string(8)
+        gateway = f"GATEWAY-{gatewayShortId}"
+        credentialToSend["SSID"] = ssid
+        credentialToSend["PASSWORD"] = password
+        credentialToSend["GATEWAY"] = gateway
+        Variable.setNetwrokCredential(
+            f"{selectedPort}", credentialToSend)
 
-        # JIKA SUDAH ADA MAKA TAMPILKAN
-        if networkDetail:
-            availableData = Variable.getPortNetwrokCredential(
-                f"COM{selectedPort}")
-            print(availableData)
-            credentialToSend["SSID"] = availableData["SSID"]
-            credentialToSend["PASSWORD"] = availableData["PASSWORD"]
-            credentialToSend["GATEWAY"] = availableData["GATEWAY"]
+    # JIKA SUDAH ADA MAKA TAMPILKAN
+    if networkDetail:
+        availableData = Variable.getPortNetwrokCredential(
+            f"{selectedPort}")
+        print(availableData)
+        credentialToSend["SSID"] = availableData["SSID"]
+        credentialToSend["PASSWORD"] = availableData["PASSWORD"]
+        credentialToSend["GATEWAY"] = availableData["GATEWAY"]
 
-        # KIRIMKAN MELALUI KOMUNIKASI SERIAL
-        credentialToSend["type"] = "networksetup"
-        return str(credentialToSend)
+    # KIRIMKAN MELALUI KOMUNIKASI SERIAL
+    credentialToSend["type"] = "networksetup"
+    return str(credentialToSend)
 
 
 while True:

@@ -637,7 +637,7 @@ class NetworkFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1,  corner_radius=Util.CORNER_RADIUS)
         self.deviceListFrame.grid(row=0, column=0, sticky="nswe", padx=[0, 20])
         self.deviceListLabel = customtkinter.CTkLabel(
-            master=self.deviceListFrame, text="Mesh AP Port", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+            master=self.deviceListFrame, text_color=Util.COLOR_NEUTRAL_5, text="Mesh AP Port", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.deviceListLabel.pack(anchor="w")
         self.devices = []
 
@@ -647,11 +647,13 @@ class NetworkFrames(customtkinter.CTkFrame):
         portsListForUserInterface = []
         for port in ports:
             portsList.append(str(port))
-            if platform.system() == "Windows":
-                portsListForUserInterface.append(str(port).split(" - ")[0])
+            portsListForUserInterface.append(str(port).split(" - ")[0])
+            # if platform.system() == "Windows":
+            #     portsListForUserInterface.append(str(port).split(" - ")[0])
 
-            if platform.system() == "Linux":
-                pass
+            # if platform.system() == "Linux":
+            #     portsListForUserInterface.append(str(port).split(" - ")[0])
+            #     pass
 
         # DISPLAY ALL AVAILABLE PORT
         for port in portsListForUserInterface:
@@ -663,7 +665,7 @@ class NetworkFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1,  corner_radius=Util.CORNER_RADIUS)
         self.networkDetailFrame.grid(row=0, column=1, sticky="nswe", padx=20)
         self.networkDetailLabel = customtkinter.CTkLabel(
-            master=self.networkDetailFrame, text="Network Status", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+            master=self.networkDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text="Network Status", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.networkDetailLabel.pack(anchor="w")
 
     def itemContainer(self, title):
@@ -672,7 +674,7 @@ class NetworkFrames(customtkinter.CTkFrame):
         self.nodeItemContainer.pack(
             anchor="center", fill="both", padx=[0, 10], pady=10)
         self.nodeItemLabel = customtkinter.CTkLabel(
-            master=self.nodeItemContainer, text=f"{title}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
+            master=self.nodeItemContainer,text_color=Util.COLOR_NEUTRAL_5, text=f"{title}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
         self.nodeItemLabel.place(relx=0.1, rely=0.17, anchor="nw")
         # CEK APAKAH PORT YANG DITUJU SUDAH AKTIF DAN MEMILIKI PID
         port_pid = Variable.getPortAuthDaemonPID(title)
@@ -697,10 +699,10 @@ class NetworkFrames(customtkinter.CTkFrame):
         self.networkItemFrame.pack(
             anchor="w", fill="both", padx=[0, 10], pady=10)
         self.roomDetailTitle = customtkinter.CTkLabel(
-            master=self.networkItemFrame, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
+            master=self.networkItemFrame,text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
         self.roomDetailTitle.pack(anchor="w", padx=[20, 0], pady=[10, 0])
         self.roomDetailDescription = customtkinter.CTkLabel(
-            master=self.networkItemFrame, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
+            master=self.networkItemFrame,text_color=Util.COLOR_NEUTRAL_5, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
         self.roomDetailDescription.pack(anchor="w", padx=[20, 0], pady=[0, 20])
 
     def portOnClick(self, port):
@@ -733,11 +735,11 @@ class NetworkFrames(customtkinter.CTkFrame):
                 "GATEWAY NAME", availableData["GATEWAY"])
             self.networkDetailTemplate("LAST SEEN", "DAEMON ID")
             self.meshDaemonStatus = customtkinter.CTkButton(
-                master=self.networkDetailFrame, text="Daemon Status", command=lambda: self.checkAuthDaemon(port), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
+                master=self.networkDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text="Daemon Status", command=lambda: self.checkAuthDaemon(port), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
             self.meshDaemonStatus.pack(anchor="center",
                                        padx=[0, 10], pady=[0, 20], fill="x")
             self.meshDaemonStop = customtkinter.CTkButton(
-                master=self.networkDetailFrame, text="Stop Daemon", command=lambda: self.stopConnectionOnClick(port), fg_color=Util.COLOR_RED_1, hover_color=Util.COLOR_RED_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
+                master=self.networkDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text="Stop Daemon", command=lambda: self.stopConnectionOnClick(port), fg_color=Util.COLOR_RED_1, hover_color=Util.COLOR_RED_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
             self.meshDaemonStop.pack(anchor="center",
                                      padx=[0, 10], pady=[0, 20], fill="x")
 
@@ -746,15 +748,18 @@ class NetworkFrames(customtkinter.CTkFrame):
         networkThread.start()
 
     def stopConnectionOnClick(self, port):
-        os.kill(Variable.getPortAuthDaemonPID(port), SIGINT)
+        Util.stopScript(Variable.getPortAuthDaemonPID(port))
+        # os.kill(Variable.getPortAuthDaemonPID(port), SIGINT)
 
     def startConnection(self, port):
-        if platform.system() == "Windows":
-            subprocess.call(
-                f'start /wait python ./serialWorker.py {port[-1]}', shell=True)  # only take port number if in windows
+        print("selected port", port)
+        Util.startScript(f"./serialWorker.py \"{port}\"")
+        # if platform.system() == "Windows":
+        #     subprocess.call(
+        #         f'start /wait python ./serialWorker.py {port[-1]}', shell=True)  # only take port number if in windows
 
-        if platform.system() == "Linux":
-            pass
+        # if platform.system() == "Linux":
+        #     pass
 
     def checkAuthDaemon(self, port):
         authPid = Variable.getPortAuthDaemonPID(port)
@@ -781,11 +786,9 @@ class SyncFrames(customtkinter.CTkFrame):
         if availableData.lastSync != None:
             # execpetion for linux
             try:
-                print("WIND")
                 formatedDate = datetime.fromisoformat(
                     availableData.lastSync).astimezone(timezone(timedelta(hours=7)))
             except:
-                print("LINUX")
                 formatedDate = datetime.fromisoformat(
                     availableData.lastSync.replace('Z', '+00:00')).astimezone(timezone(timedelta(hours=7)))
 
@@ -824,7 +827,7 @@ class SyncFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS)
         self.syncFrame.grid(row=0, column=1, sticky="nswe", padx=[0, 20])
         self.syncLabel = customtkinter.CTkLabel(master=self.syncFrame, text="Syncronization Daeomon Settings", font=(
-            Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, width=330, anchor="w")
+            Util.FONT.SemiBold, Util.FONT.SIZE.Large), text_color=Util.COLOR_NEUTRAL_5, pady=0, width=330, anchor="w")
         self.syncLabel.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
         self.syncStartBtn = customtkinter.CTkButton(master=self.syncFrame, text="Start", height=35,
                                                     fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, command=self.threadSync)
