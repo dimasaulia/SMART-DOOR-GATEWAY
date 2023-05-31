@@ -1,1 +1,1 @@
-{"syncpid": 0, "syncstatus": false, "networkCredential": {}, "authenticationDaemon": {}}
+{"syncpid": 2512, "syncstatus": false, "networkCredential": {"COM3": {"SSID": "MN-GATEWAY-0S4dG-1", "PASSWORD": "gttswkcu", "GATEWAY": "GATEWAY-0S4dG"}}, "authenticationDaemon": {"COM3": 25584}}
