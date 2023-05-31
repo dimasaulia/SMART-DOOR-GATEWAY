@@ -926,20 +926,20 @@ class SettingFrames(customtkinter.CTkFrame):
         self.credentialFrame.grid(
             row=0, column=0, sticky="nswe", padx=[0, 20])
         self.credentialLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="Gateway Credential Settings", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w")
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="Gateway Credential Settings", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w")
         self.credentialLabel.pack(anchor="w", fill="both",
                                   padx=[20, 20], pady=10)
         self.apiIdLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="API ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="API ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
         self.apiIdLabel.pack(anchor="w",
                              padx=[20, 20], pady=0)
-        self.apiIdForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Please Input API ID",
+        self.apiIdForm = customtkinter.CTkEntry(master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, height=50, placeholder_text="Please Input API ID",
                                                 fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
         self.apiIdForm.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
         self.apiKeyLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="API Key", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="API Key", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
         self.apiKeyLabel.pack(anchor="w", padx=[20, 20], pady=0)
-        self.apiKeyForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Please Input API Key",
+        self.apiKeyForm = customtkinter.CTkEntry(master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, height=50, placeholder_text="Please Input API Key",
                                                  fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, width=350)
         self.apiKeyForm.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
         self.submitButton = customtkinter.CTkButton(master=self.credentialFrame, width=350, height=45, text="Save", fg_color=Util.COLOR_BLUE_1,
@@ -951,7 +951,7 @@ class SettingFrames(customtkinter.CTkFrame):
         self.aboutFrame.grid(
             row=0, column=1, sticky="nswe", padx=[0, 0])
         self.aboutLabel = customtkinter.CTkLabel(
-            master=self.aboutFrame, text="About", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
+            master=self.aboutFrame, text="About", text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
         self.aboutLabel.pack(anchor="w", fill="both",
                              padx=[20, 20], pady=10)
         self.information("Device Version: 1.0.0")
@@ -959,7 +959,7 @@ class SettingFrames(customtkinter.CTkFrame):
 
     def information(self, text):
         self.informationLabel = customtkinter.CTkLabel(
-            master=self.aboutFrame, text=text, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0, anchor="w", width=350)
+            master=self.aboutFrame, text=text, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0, anchor="w", width=350)
         self.informationLabel.pack(anchor="w", fill="both",
                                    padx=[20, 20], pady=0)
 
@@ -1002,30 +1002,30 @@ class CardFrames(customtkinter.CTkFrame):
         self.credentialFrame.grid(
             row=0, column=0, sticky="nswe", padx=[0, 20])
         self.credentialLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="Card Registration", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w")
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="Card Registration", font=(Util.FONT.Bold, Util.FONT.SIZE.Large), pady=0, anchor="w")
         self.credentialLabel.pack(anchor="w", fill="both",
                                   padx=[20, 20], pady=10)
 
         self.cardIdLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="CARD ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="CARD ID", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
         self.cardIdLabel.pack(anchor="w",
                               padx=[20, 20], pady=0)
-        self.cardIdForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Card ID will appear here when card detected",
+        self.cardIdForm = customtkinter.CTkEntry(master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, height=50, placeholder_text="Card ID will appear here when card detected",
                                                  fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS)
         self.cardIdForm.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
         self.cardIdForm.configure(state="disable")
 
         self.cardPinLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="CARD PIN", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="CARD PIN", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
         self.cardPinLabel.pack(anchor="w", padx=[20, 20], pady=0)
-        self.cardPinForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Optional to proivde card pin",
+        self.cardPinForm = customtkinter.CTkEntry(master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, height=50, placeholder_text="Optional to proivde card pin",
                                                   fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, width=350)
         self.cardPinForm.pack(anchor="w", fill="both", padx=[20, 20], pady=10)
 
         self.cardOwnerLabel = customtkinter.CTkLabel(
-            master=self.credentialFrame, text="CARD OWNER", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
+            master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, text="CARD OWNER", font=(Util.FONT.Bold, Util.FONT.SIZE.Regular))
         self.cardOwnerLabel.pack(anchor="w", padx=[20, 20], pady=0)
-        self.cardOwnerForm = customtkinter.CTkEntry(master=self.credentialFrame, height=50, placeholder_text="Optional to proivde card owner (username)",
+        self.cardOwnerForm = customtkinter.CTkEntry(master=self.credentialFrame, text_color=Util.COLOR_NEUTRAL_5, height=50, placeholder_text="Optional to proivde card owner (username)",
                                                     fg_color=Util.COLOR_NEUTRAL_2, border_color=Util.COLOR_NEUTRAL_4, corner_radius=Util.CORNER_RADIUS, width=350)
         self.cardOwnerForm.pack(anchor="w", fill="both",
                                 padx=[20, 20], pady=10)
@@ -1039,7 +1039,7 @@ class CardFrames(customtkinter.CTkFrame):
         self.aboutFrame.grid(
             row=0, column=1, sticky="nswe", padx=[0, 0])
         self.aboutLabel = customtkinter.CTkLabel(
-            master=self.aboutFrame, text="Instruction", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
+            master=self.aboutFrame, text_color=Util.COLOR_NEUTRAL_5, text="Instruction", font=(Util.FONT.Bold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
         self.aboutLabel.pack(anchor="w", fill="both",
                              padx=[20, 20], pady=10)
         self.information("1. Please tap your card on RFID Reader")
@@ -1051,7 +1051,7 @@ class CardFrames(customtkinter.CTkFrame):
 
     def information(self, text):
         self.informationLabel = customtkinter.CTkLabel(
-            master=self.aboutFrame, text=text, wraplength=300, justify="left", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0, anchor="w", width=350)
+            master=self.aboutFrame, text_color=Util.COLOR_NEUTRAL_5, text=text, wraplength=300, justify="left", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0, anchor="w", width=350)
         self.informationLabel.pack(anchor="w", fill="both",
                                    padx=[20, 20], pady=0)
 

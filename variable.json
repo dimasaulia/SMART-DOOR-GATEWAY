@@ -1,1 +1,1 @@
-{"syncpid": 29250, "syncstatus": false, "networkCredential": {"/dev/ttyUSB0": {"SSID": "MN-GATEWAY-0S4dG-1", "PASSWORD": "pscgtkur", "GATEWAY": "GATEWAY-0S4dG"}}, "authenticationDaemon": {"/dev/ttyUSB0": 8553}}
+{"syncpid": 0, "syncstatus": false, "networkCredential": {}, "authenticationDaemon": {}}

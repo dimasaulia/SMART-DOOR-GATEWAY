@@ -10,7 +10,7 @@ gatewayShortId = availableGateway.shortId
 
 RABIT_SETTINGS = {
     "protocol": "amqp",
-    "hostname": "172.31.40.76",
+    "hostname": "172.29.233.187",
     "port": 5672,
     "vhost": "0.0.0.0",
     "exchange": "smartdoor",
