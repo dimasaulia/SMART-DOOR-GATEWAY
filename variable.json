@@ -1,1 +1,1 @@
-{"syncpid": 5956, "syncstatus": false, "networkCredential": {"/dev/ttyUSB0": {"SSID": "MN-GATEWAY-0S4dG-1", "PASSWORD": "gttswkcu", "GATEWAY": "GATEWAY-0S4dG"}}, "authenticationDaemon": {"/dev/ttyUSB0": 14722}}
+{"syncpid": 26640, "syncstatus": false, "networkCredential": {"/dev/ttyUSB0": {"SSID": "MN-GATEWAY-0S4dG-1", "PASSWORD": "gttswkcu", "GATEWAY": "GATEWAY-0S4dG"}, "COM3": {"SSID": "MN-GATEWAY-0S4dG-1", "PASSWORD": "gttswkcu", "GATEWAY": "GATEWAY-0S4dG"}}, "authenticationDaemon": {"/dev/ttyUSB0": 14722, "COM3": 24144}}
