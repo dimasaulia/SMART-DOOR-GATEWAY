@@ -143,7 +143,7 @@ class Util():
             subprocess.call(f"start /wait python {pythonScript}", shell=True)
 
         if platform.system() == "Linux":
-            subprocess.Popen(
+            subprocess.call(
                 f"lxterminal -e 'bash -c \"source ./venv/bin/activate && python {pythonScript}; exec bash\"'", shell=True)
 
     @staticmethod
