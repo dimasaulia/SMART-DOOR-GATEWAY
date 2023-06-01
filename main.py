@@ -40,8 +40,8 @@ class Util():
         os.path.realpath(__file__)), "static")
 
     URL = "http://192.168.226.130:8000"
-    APP_WIDTH = 1024
-    APP_HEIGHT = 600
+    APP_WIDTH = 800
+    APP_HEIGHT = 400
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -66,10 +66,10 @@ class Util():
             "Bold": "Cantarell Extra Bold",
             "SIZE": DotDict({
                 "Small": 12,
-                "Regular": 16,
-                "Large": 22,
-                "ExtraLarge": 40,
-                "SuperLarge": 100,
+                "Regular": 14,
+                "Large": 20,
+                "ExtraLarge": 30,
+                "SuperLarge": 60,
             })
         })
     if OS == "Windows":
@@ -303,7 +303,7 @@ class ApiFormFrames(customtkinter.CTkFrame):
                   errMsg="Success Save Data")
 
 
-class SideBarFrames(customtkinter.CTkFrame):
+class SideBarFrames(customtkinter.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.stopEvent = Event()
@@ -316,41 +316,41 @@ class SideBarFrames(customtkinter.CTkFrame):
         self.homeButtonIcon = Util.imageGenerator("icon_home.png")
         self.homeButton = customtkinter.CTkButton(master=self, text="Home", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.homeButtonIcon,
                                                   anchor="w", fg_color=Util.COLOR_BLUE_1, hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.homeButton))
-        self.homeButton.grid(row=0, column=0, padx=10, pady=20, sticky="w")
+        self.homeButton.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         self.homeFrame = HomeFrames(
             master=self.master, fg_color=Util.COLOR_TRANSPARENT)
         self.homeFrame.grid(row=0, column=1, padx=[
-                            0, 20], pady=20, sticky="nsew")
+                            0, 20], pady=10, sticky="nsew")
 
         self.roomButtonIcon = Util.imageGenerator("icon_room.png")
         self.roomButton = customtkinter.CTkButton(master=self, text="Room", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.roomButtonIcon,
                                                   anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.roomButton))
-        self.roomButton.grid(row=1, column=0, padx=10, pady=20, sticky="w")
+        self.roomButton.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
         self.cardButtonIcon = Util.imageGenerator("icon_card.png")
         self.cardButton = customtkinter.CTkButton(master=self, text="Card", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.cardButtonIcon,
                                                   anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.cardButton))
-        self.cardButton.grid(row=2, column=0, padx=10, pady=20, sticky="w")
+        self.cardButton.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
         self.syncButtonIcon = Util.imageGenerator("icon_sync.png")
         self.syncButton = customtkinter.CTkButton(master=self, text="Sync", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.syncButtonIcon,
                                                   anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.syncButton))
-        self.syncButton.grid(row=3, column=0, padx=10, pady=20, sticky="w")
+        self.syncButton.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
         self.networkButtonIcon = Util.imageGenerator("icon_mesh.png")
         self.networkButton = customtkinter.CTkButton(master=self, text="Network", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.networkButtonIcon,
                                                      anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.networkButton))
-        self.networkButton.grid(row=4, column=0, padx=10, pady=20, sticky="w")
+        self.networkButton.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
         self.settingButtonIcon = Util.imageGenerator("icon_settings.png")
         self.settingButton = customtkinter.CTkButton(master=self, text="Setting", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.settingButtonIcon,
                                                      anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.settingButton))
-        self.settingButton.grid(row=5, column=0, padx=10, pady=20, sticky="w")
+        self.settingButton.grid(row=5, column=0, padx=10, pady=10, sticky="w")
 
         self.logoutButtonIcon = Util.imageGenerator("logout.png")
         self.logoutButton = customtkinter.CTkButton(master=self, text="Logout", font=(Util.FONT.Bold, Util.FONT.SIZE.Small), image=self.logoutButtonIcon,
                                                     anchor="w", fg_color="transparent", hover_color=Util.COLOR_BLUE_2, command=lambda: self.widgetOnClick(self.logoutButton))
-        self.logoutButton.grid(row=6, column=0, padx=10, pady=20, sticky="w")
+        self.logoutButton.grid(row=6, column=0, padx=10, pady=10, sticky="w")
 
     def widgetOnClick(self, item):
         for child in self.winfo_children():
