@@ -88,6 +88,31 @@ class Util():
         })
 
     @staticmethod
+    def pingServer():
+        print("Try Connect To Server for Updating Gateway Online Time....")
+        gatewayInfo = Gateway.select().dicts()
+        online = requests.post(
+            f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
+        if (online.status_code == 200):  # jika perangkat masih online, maka redirect
+            print("Success Update Gateway Online Time")
+
+        nodes = Node.select().dicts()
+
+        for node in nodes:
+            nodeShortId = node["shortId"]
+            nodeAccumulativeResponseTime = Variable.getLog(nodeShortId)
+            print(
+                f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
+            nodeOnline = requests.post(
+                f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
+                    "duid": nodeShortId,
+                    "responsesTime": nodeAccumulativeResponseTime
+                })
+            if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
+                print(f"Success Update Node {nodeShortId} Online Time")
+                Variable.reSetLog(nodeShortId)  # reset log for spesific node
+
+    @staticmethod
     def frameDestroyer(fr):
         fr.destroy()
 
@@ -114,7 +139,8 @@ class Util():
             subprocess.call(f"start /wait python {pythonScript}", shell=True)
 
         if platform.system() == "Linux":
-            subprocess.Popen(f"lxterminal -e 'bash -c \"source ./venv/bin/activate && python {pythonScript}; exec bash\"'", shell=True)
+            subprocess.Popen(
+                f"lxterminal -e 'bash -c \"source ./venv/bin/activate && python {pythonScript}; exec bash\"'", shell=True)
 
     @staticmethod
     def stopScript(pid):
@@ -122,7 +148,7 @@ class Util():
             os.kill(pid, SIGINT)
 
         if platform.system() == "Linux":
-            subprocess.run(["kill","-9", str(pid) ])
+            subprocess.run(["kill", "-9", str(pid)])
 
 
 class LoginFrames(customtkinter.CTkFrame):
@@ -425,8 +451,8 @@ class HomeFrames(customtkinter.CTkFrame):
             Util.FONT.Bold, Util.FONT.SIZE.ExtraLarge), fg_color=Util.COLOR_TRANSPARENT, text="Smart Door Gateway Device", text_color=Util.COLOR_NEUTRAL_5)
         self.appTitle.pack(anchor="w", pady=20, padx=[10, 10])
         self.appDescription = customtkinter.CTkLabel(master=self.headerFrame, anchor="w", justify="left", font=(
-            Util.FONT.Regular, Util.FONT.SIZE.Regular), wraplength=600, text_color=Util.COLOR_NEUTRAL_5,text="The gateway device is the authentication center hardware for the smart door node. This device will store user card data, as well as be used to register user cards.")
-        self.appDescription.pack(anchor="w", pady=[0,40], padx=[10, 10])
+            Util.FONT.Regular, Util.FONT.SIZE.Regular), wraplength=600, text_color=Util.COLOR_NEUTRAL_5, text="The gateway device is the authentication center hardware for the smart door node. This device will store user card data, as well as be used to register user cards.")
+        self.appDescription.pack(anchor="w", pady=[0, 40], padx=[10, 10])
 
         self.nodeFrame = customtkinter.CTkFrame(
             master=self, height=200, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
@@ -434,14 +460,14 @@ class HomeFrames(customtkinter.CTkFrame):
                             30, 0], padx=[0, 30], sticky="nwne")
         self.nodeFrame.grid_propagate(False)
         self.nodeFrameCount = customtkinter.CTkLabel(master=self.nodeFrame, font=(
-            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge),text_color=Util.COLOR_NEUTRAL_5, text=nodeCount, fg_color="transparent")
+            Util.FONT.Bold, Util.FONT.SIZE.SuperLarge), text_color=Util.COLOR_NEUTRAL_5, text=nodeCount, fg_color="transparent")
         self.nodeFrameTitle = customtkinter.CTkLabel(
             master=self.nodeFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Smart Door Node")
         self.nodeFrameDescription = customtkinter.CTkLabel(
             master=self.nodeFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text="Linked Device")
-        self.nodeFrameTitle.pack(anchor="w", pady=[20,0], padx=[20, 10])
-        self.nodeFrameCount.pack(anchor="w", pady=[0,0], padx=[20, 10])
-        self.nodeFrameDescription.pack(anchor="w", pady=[0,20], padx=[20, 10])
+        self.nodeFrameTitle.pack(anchor="w", pady=[20, 0], padx=[20, 10])
+        self.nodeFrameCount.pack(anchor="w", pady=[0, 0], padx=[20, 10])
+        self.nodeFrameDescription.pack(anchor="w", pady=[0, 20], padx=[20, 10])
 
         self.syncFrame = customtkinter.CTkFrame(
             master=self, height=200, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
@@ -454,9 +480,9 @@ class HomeFrames(customtkinter.CTkFrame):
             master=self.syncFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text="Last Sync")
         self.nodeFrameDescription = customtkinter.CTkLabel(
             master=self.syncFrame, text_color=Util.COLOR_NEUTRAL_5, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text=lastSyncDate)
-        self.nodeFrameTitle.pack(anchor="w", pady=[20,0], padx=[20, 10])
-        self.nodeFrameCount.pack(anchor="w", pady=[0,0], padx=[20, 10])
-        self.nodeFrameDescription.pack(anchor="w", pady=[0,20], padx=[20, 10])
+        self.nodeFrameTitle.pack(anchor="w", pady=[20, 0], padx=[20, 10])
+        self.nodeFrameCount.pack(anchor="w", pady=[0, 0], padx=[20, 10])
+        self.nodeFrameDescription.pack(anchor="w", pady=[0, 20], padx=[20, 10])
 
         self.cardFrame = customtkinter.CTkFrame(
             master=self, height=200, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
@@ -469,9 +495,9 @@ class HomeFrames(customtkinter.CTkFrame):
             master=self.cardFrame, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5, text="Accapted Card")
         self.nodeFrameDescription = customtkinter.CTkLabel(
             master=self.cardFrame, font=(Util.FONT.Light, Util.FONT.SIZE.Regular), text_color=Util.COLOR_NEUTRAL_5, text="Card")
-        self.nodeFrameTitle.pack(anchor="w", pady=[20,0], padx=[20, 10])
-        self.nodeFrameCount.pack(anchor="w", pady=[0,0], padx=[20, 10])
-        self.nodeFrameDescription.pack(anchor="w", pady=[0,20], padx=[20, 10])
+        self.nodeFrameTitle.pack(anchor="w", pady=[20, 0], padx=[20, 10])
+        self.nodeFrameCount.pack(anchor="w", pady=[0, 0], padx=[20, 10])
+        self.nodeFrameDescription.pack(anchor="w", pady=[0, 20], padx=[20, 10])
 
 
 class RoomFrames(customtkinter.CTkFrame):
@@ -554,7 +580,7 @@ class RoomFrames(customtkinter.CTkFrame):
         self.cardDetailFrame.pack(
             anchor="w", fill="both", padx=[0, 10], pady=10)
         self.cardDetailTitle = customtkinter.CTkLabel(
-            master=self.cardDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
+            master=self.cardDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
         self.cardDetailTitle.pack(anchor="w", padx=[20, 0], pady=10)
 
     def addNewNodeOnClick(self):
@@ -665,7 +691,7 @@ class NetworkFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1,  corner_radius=Util.CORNER_RADIUS)
         self.networkDetailFrame.grid(row=0, column=1, sticky="nswe", padx=20)
         self.networkDetailLabel = customtkinter.CTkLabel(
-            master=self.networkDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text="Network Status", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+            master=self.networkDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text="Network Status", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.networkDetailLabel.pack(anchor="w")
 
     def itemContainer(self, title):
@@ -674,7 +700,7 @@ class NetworkFrames(customtkinter.CTkFrame):
         self.nodeItemContainer.pack(
             anchor="center", fill="both", padx=[0, 10], pady=10)
         self.nodeItemLabel = customtkinter.CTkLabel(
-            master=self.nodeItemContainer,text_color=Util.COLOR_NEUTRAL_5, text=f"{title}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
+            master=self.nodeItemContainer, text_color=Util.COLOR_NEUTRAL_5, text=f"{title}", font=(Util.FONT.Regular, Util.FONT.SIZE.Regular), pady=0)
         self.nodeItemLabel.place(relx=0.1, rely=0.17, anchor="nw")
         # CEK APAKAH PORT YANG DITUJU SUDAH AKTIF DAN MEMILIKI PID
         port_pid = Variable.getPortAuthDaemonPID(title)
@@ -699,10 +725,10 @@ class NetworkFrames(customtkinter.CTkFrame):
         self.networkItemFrame.pack(
             anchor="w", fill="both", padx=[0, 10], pady=10)
         self.roomDetailTitle = customtkinter.CTkLabel(
-            master=self.networkItemFrame,text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
+            master=self.networkItemFrame, text_color=Util.COLOR_NEUTRAL_5, text=title, font=(Util.FONT.Regular, Util.FONT.SIZE.Regular))
         self.roomDetailTitle.pack(anchor="w", padx=[20, 0], pady=[10, 0])
         self.roomDetailDescription = customtkinter.CTkLabel(
-            master=self.networkItemFrame,text_color=Util.COLOR_NEUTRAL_5, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
+            master=self.networkItemFrame, text_color=Util.COLOR_NEUTRAL_5, text=desc, font=(Util.FONT.Bold, Util.FONT.SIZE.Large))
         self.roomDetailDescription.pack(anchor="w", padx=[20, 0], pady=[0, 20])
 
     def portOnClick(self, port):
@@ -735,11 +761,11 @@ class NetworkFrames(customtkinter.CTkFrame):
                 "GATEWAY NAME", availableData["GATEWAY"])
             self.networkDetailTemplate("LAST SEEN", "DAEMON ID")
             self.meshDaemonStatus = customtkinter.CTkButton(
-                master=self.networkDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text="Daemon Status", command=lambda: self.checkAuthDaemon(port), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
+                master=self.networkDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text="Daemon Status", command=lambda: self.checkAuthDaemon(port), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
             self.meshDaemonStatus.pack(anchor="center",
                                        padx=[0, 10], pady=[0, 20], fill="x")
             self.meshDaemonStop = customtkinter.CTkButton(
-                master=self.networkDetailFrame,text_color=Util.COLOR_NEUTRAL_5, text="Stop Daemon", command=lambda: self.stopConnectionOnClick(port), fg_color=Util.COLOR_RED_1, hover_color=Util.COLOR_RED_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
+                master=self.networkDetailFrame, text_color=Util.COLOR_NEUTRAL_5, text="Stop Daemon", command=lambda: self.stopConnectionOnClick(port), fg_color=Util.COLOR_RED_1, hover_color=Util.COLOR_RED_2, height=40, font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular))
             self.meshDaemonStop.pack(anchor="center",
                                      padx=[0, 10], pady=[0, 20], fill="x")
 
@@ -892,8 +918,7 @@ class SyncFrames(customtkinter.CTkFrame):
             Util.startScript("./amqp.py")
         if (statusPid):
             Toast(master=self.master, color=Util.COLOR_GREEN_1,
-                    errMsg="Service Already Running")
-
+                  errMsg="Service Already Running")
 
     def stopSync(self):
         print(" [!main]: Stop Sync")
@@ -997,6 +1022,10 @@ class CardFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=4)
 
+        cardReadingProcess = Thread(target=self.cardReading)
+        cardReadingProcess.daemon = True
+        cardReadingProcess.start()
+
         self.credentialFrame = customtkinter.CTkFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
         self.credentialFrame.grid(
@@ -1058,11 +1087,25 @@ class CardFrames(customtkinter.CTkFrame):
     def saveOnClick(self):
         pass
 
+    def cardReading(self):
+        no = 0
+        while True:
+            # Dummy code, change with rfid in RPI
+            print("Try read RFID")
+            if (no == 50):
+                self.cardIdForm.configure(state="normal")
+                self.cardIdForm.configure(placeholder_text="aa")
+                self.cardIdForm.configure(state="disable")
+                print("CARD FOUND")
+
+            time.sleep(0.1)
+            no += 1
+
 
 class Toast(customtkinter.CTkFrame):
     count = 0
 
-    def __init__(self, master, errMsg, color, text_color = Util.COLOR_NEUTRAL_5, **kwargs):
+    def __init__(self, master, errMsg, color, text_color=Util.COLOR_NEUTRAL_5, **kwargs):
 
         Toast.count += 1
         self.marginY = [100, 10] if Toast.count <= 1 else [10, 10]
@@ -1084,6 +1127,24 @@ class Toast(customtkinter.CTkFrame):
             Toast.count -= 1
 
 
+class SetInterval:
+    def __init__(self, interval, action):
+        self.interval = interval
+        self.action = action
+        self.stopEvent = Event()
+        thread = Thread(target=self.__setInterval)
+        thread.start()
+
+    def __setInterval(self):
+        nextTime = time.time()+self.interval
+        while not self.stopEvent.wait(nextTime-time.time()):
+            nextTime += self.interval
+            self.action()
+
+    def cancel(self):
+        self.stopEvent.set()
+
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -1092,6 +1153,7 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
+        self.cancelPingDaeomon = SetInterval(0.25*60, Util.pingServer)
         # loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
         # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
@@ -1105,3 +1167,6 @@ if __name__ == "__main__":
     app = App()
     mainApp = Thread(target=app.mainloop())
     mainApp.start()
+    print("Try to cancel ping")
+    # for development, when app close system stop pinging server
+    app.cancelPingDaeomon.cancel()

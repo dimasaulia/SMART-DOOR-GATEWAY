@@ -10,16 +10,16 @@ gatewayShortId = availableGateway.shortId
 
 RABIT_SETTINGS = {
     "protocol": "amqp",
-    "hostname": "172.29.233.187",
+    "hostname": "172.29.234.57",
     "port": 5672,
     "vhost": "0.0.0.0",
     "exchange": "smartdoor",
     "queues": ["smartdoorgateway"],
 }
 
-credential = pika.PlainCredentials("smartdoor","t4np454nd1")
+credential = pika.PlainCredentials("smartdoor", "t4np454nd1")
 connection = pika.BlockingConnection(
-    pika.ConnectionParameters(RABIT_SETTINGS["hostname"],RABIT_SETTINGS["port"],"0.0.0.0",credential))
+    pika.ConnectionParameters(RABIT_SETTINGS["hostname"], RABIT_SETTINGS["port"], "0.0.0.0", credential))
 
 channel = connection.channel()
 

@@ -23,7 +23,8 @@ def cardAuth(payload):
             raise CustomException("Ruangan Tidak Ditemukan")
 
         # Cek Apakah Kartu Terdapat Di Database
-        card = Card.get_or_none(Card.cardId == sourceObj["card"]["id"])
+        card = Card.get_or_none(Card.cardId == str(
+            sourceObj["card"]["id"]).replace(" ", ""))
         if card == None:
             raise CustomException("Kartu tidak tersimpan di database")
         if card.isBanned:
@@ -44,6 +45,7 @@ def cardAuth(payload):
                     "type": "auth",
                     "source": sourceObj["destination"],
                     "destination": sourceObj["source"],
+                    "msgid": sourceObj["msgid"],
                     "message": "Berhasil Membuka Ruangan"
                 }
                 return (json.dumps(resp))
@@ -58,6 +60,7 @@ def cardAuth(payload):
                 "type": "auth",
                 "source": sourceObj["destination"],
                 "destination": sourceObj["source"],
+                "msgid": sourceObj["msgid"],
                 "message": "Berhasil Membuka Ruangan"
             }
             return (json.dumps(resp))
@@ -67,6 +70,7 @@ def cardAuth(payload):
             "success": False,
             "type": "auth",
             "message": str(ex),
+            "msgid": sourceObj["msgid"],
             "source": sourceObj["destination"],
             "destination": sourceObj["source"],
         }

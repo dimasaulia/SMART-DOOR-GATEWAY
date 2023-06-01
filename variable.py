@@ -10,16 +10,16 @@ class Variable():
         pass
 
     @staticmethod
-    def readFile():
-        VARIABLE_FILE = open("variable.json")
+    def readFile(file="variable.json"):
+        VARIABLE_FILE = open(file)
         VARIABLE_DATA = json.load(VARIABLE_FILE)
         VARIABLE_FILE.close()
         return VARIABLE_DATA
 
     @staticmethod
-    def writeFile(payload):
+    def writeFile(payload, file="variable.json"):
         jsonObj = json.dumps(payload)
-        with open("variable.json", "w") as outfile:
+        with open(file, "w") as outfile:
             outfile.write(jsonObj)
         return True
 
@@ -76,3 +76,53 @@ class Variable():
         VARIABLE_DATA = Variable.readFile()
         VARIABLE_DATA["networkCredential"][port] = (data)
         Variable.writeFile(VARIABLE_DATA)
+
+    @staticmethod
+    def setLog(deviceId, responseTime):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            VARIABLE_DATA[finalDeviceId] = VARIABLE_DATA[finalDeviceId] + responseTime
+        except:
+            # IF EMPTY
+            VARIABLE_DATA[finalDeviceId] = responseTime
+        Variable.writeFile(VARIABLE_DATA, "log.json")
+
+    @staticmethod
+    def reSetLog(deviceId):
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            VARIABLE_DATA[deviceId] = ""
+        except:
+            # IF EMPTY
+            VARIABLE_DATA[deviceId] = ""
+        Variable.writeFile(VARIABLE_DATA, "log.json")
+
+    @staticmethod
+    def getLog(deviceId):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            return VARIABLE_DATA[finalDeviceId]
+        except:
+            return None
+
+    @staticmethod
+    def setRequestLog(deviceId, msgId):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("requestLog.json")
+        try:
+            VARIABLE_DATA[finalDeviceId] = VARIABLE_DATA[finalDeviceId] + msgId + ","
+        except:
+            # IF EMPTY
+            VARIABLE_DATA[finalDeviceId] = msgId + ","
+        Variable.writeFile(VARIABLE_DATA, "requestLog.json")
+
+    @staticmethod
+    def getRequestLog(deviceId):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            return VARIABLE_DATA[finalDeviceId]
+        except:
+            return None

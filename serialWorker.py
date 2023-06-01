@@ -30,11 +30,10 @@ Variable.setAuthDaemonPID(f"{selectedPort}", os.getpid())
 
 # if platform.system() == "Linux":
 #     print(
-#         f"Mesh Netwrok And Authentication Start On {selectedPort}, Waiting For Request")   
+#         f"Mesh Netwrok And Authentication Start On {selectedPort}, Waiting For Request")
 #     serialDebug = serial.Serial(port=f'{selectedPort}', baudrate=115200,
 #                                 bytesize=8, parity="N", stopbits=serial.STOPBITS_TWO, timeout=1)
 #     print(f"{selectedPort}: PID={os.getpid()}")
-
 
 
 def setupNetwork():
@@ -80,6 +79,7 @@ while True:
                 payloadArray = serialString.split(".")
                 data = json.loads(payloadArray[1])
                 if (data["type"] == "auth"):
+                    Variable.setRequestLog(data["source"], data["msgid"])
                     print("[G]: Waiting For Auth")
                     resp = cardAuth(payload=payloadArray[1])
                     print(f"[G]: {resp}")
@@ -91,6 +91,7 @@ while True:
                 data = json.loads(payloadArray[1])
                 if (data["type"] == "connectionping"):
                     print("[G]: Update Online Time")
+                    Variable.setLog(data["source"], data["auth"])
                     resp = updateNodeOnlineTime(payload=payloadArray[1])
                     print(f"[G]: {resp}")
 
