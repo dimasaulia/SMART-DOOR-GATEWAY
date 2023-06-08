@@ -1,3 +1,6 @@
 secret/.env
+log.json
+requestLog.json
+variable.json
 # database/gateway.db
 env
