@@ -11,6 +11,7 @@ import serial.tools.list_ports
 import time
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
+#from mfrc522 import MFRC522
 from threading import Thread, Event, Timer
 from signal import SIGINT, signal
 from datetime import datetime, timedelta, timezone
@@ -58,11 +59,14 @@ class Util():
     COLOR_NEUTRAL_5 = "#ECF0F1"
     COLOR_TRANSPARENT = "transparent"
     CORNER_RADIUS = 15
+    CURRENT_FRAME = ""
+    CARD_FORM = ""
 
     if OS == "Linux":
         APP_WIDTH = 800
         APP_HEIGHT = 400
         READER = SimpleMFRC522()
+        #READER = MFRC522()
         READER_STATUS = False
         FONT = DotDict({
             "Light": "Cantarell Thin",
@@ -369,6 +373,7 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
         # self.t.cancel()
         # self.t = Timer(15, self.autoLogout, ())
         # self.t.start()
+        Util.CURRENT_FRAME = state
         if state == "Home":
             print(" [!main]: Render Home Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
@@ -1020,12 +1025,12 @@ class CardFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(1, weight=1)
 
         if Util.READER_STATUS == False:
+        #if True:
             print("starting reader")
             Util.READER_STATUS = True
             cardReadingProcess = Thread(target=self.cardReading)
             cardReadingProcess.daemon = True
             cardReadingProcess.start()
-            #cardReadingProcess.stop()
 
         self.credentialFrame = customtkinter.CTkFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
@@ -1078,6 +1083,7 @@ class CardFrames(customtkinter.CTkFrame):
         self.information(
             "3. If you want pair card with user please provide username")
         self.information("4. Save Your Data")
+        Util.CARD_FORM = self.cardIdForm
 
     def information(self, text):
         self.informationLabel = customtkinter.CTkLabel(
@@ -1090,14 +1096,55 @@ class CardFrames(customtkinter.CTkFrame):
 
     def cardReading(self):
         #no = 0
-        while Util.READER_STATUS:
+        while True:
             try:
                 id, text = Util.READER.read()
-                print(id)
-                #self.cardIdForm.configure(state="normal")
-                #self.cardIdForm.configure(placeholder_text=id)
-                #self.cardIdForm.configure(state="disable")
+                id_hex = '{0:x}'.format(id)
+                print("ID:",id_hex)
+                
+                Util.CARD_FORM.configure(state="normal")
+                Util.CARD_FORM.configure(placeholder_text=id_hex)
+                Util.CARD_FORM.configure(state="disable")
+                #GPIO.cleanup()
+                '''
+                # 2    
+                (status, TagType) = Util.READER.Request(Util.READER.PICC_REQIDL)
+                if status == Util.READER.MI_OK:
+                    print("Connection Success!")
+                
+                # 3
+                (status, uid) = Util.READER.Anticoll()
+                if status == Util.READER.MI_OK:
+                    print(uid)
+                
+                # 4
+                #Util.READER.SelectTag(uid)
+                
+                # 5
+                trailer_block = 11
+                #This is the default key for MIFARE Cards
+                key = [0xFF, 0xFF, 0xFF , 0xFF, 0xFF, 0xFF]
+                status = Util.READER.Authenticate(
+                        Util.READER.PICC_AUTHENT1A, trailer_block , key, uid)
+                        
+                
+                # 6
+                block_nums = [8, 9, 10]
+                data = []
+                for block_num in block_nums:
+                    block_data = Util.READER.ReadTag(block_num)
+                    if block_data:
+                        data += block_data
+                if data:
+                    print(''.join(chr(i) for i in data))
+
+                '''
+            #except:
+            #   print("restarting")
+            #   GPIO.cleanup()
+            #   break
             finally:
+                #print("finish")
                 GPIO.cleanup()
            #Dummy code, change with rfid in RPI
            #print("Try read RFID")
@@ -1106,9 +1153,12 @@ class CardFrames(customtkinter.CTkFrame):
                 #self.cardIdForm.configure(placeholder_text="aa")
                 #self.cardIdForm.configure(state="disable")
                 #print("CARD FOUND")
-            time.sleep(0.1)
+            #time.sleep(0.1)
             #no += 1
-
+        #print("waking up rfid again")
+        cardReadingProcess = Thread(target=self.cardReading)
+        cardReadingProcess.daemon = True
+        cardReadingProcess.start()
 
 class Toast(customtkinter.CTkFrame):
     count = 0
