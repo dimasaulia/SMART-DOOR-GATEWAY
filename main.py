@@ -9,6 +9,8 @@ import psutil
 import serial
 import serial.tools.list_ports
 import time
+import RPi.GPIO as GPIO
+from mfrc522 import SimpleMFRC522
 from threading import Thread, Event, Timer
 from signal import SIGINT, signal
 from datetime import datetime, timedelta, timezone
@@ -60,6 +62,8 @@ class Util():
     if OS == "Linux":
         APP_WIDTH = 800
         APP_HEIGHT = 400
+        READER = SimpleMFRC522()
+        READER_STATUS = False
         FONT = DotDict({
             "Light": "Cantarell Thin",
             "Regular": "Cantarell",
@@ -521,7 +525,7 @@ class RoomFrames(customtkinter.CTkFrame):
             master=self, fg_color=Util.COLOR_NEUTRAL_1, width=300, corner_radius=Util.CORNER_RADIUS)
         self.deviceListFrame.grid(row=0, column=0, sticky="nswe", padx=[0, 5])
         self.deviceListLabel = customtkinter.CTkLabel(
-            master=self.deviceListFrame, text_color=Util.COLOR_NEUTRAL_5, text="Node List", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
+           master=self.deviceListFrame, text_color=Util.COLOR_NEUTRAL_5, text="Node List", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.deviceListLabel.pack(anchor="w")
         self.button = customtkinter.CTkButton(master=self.deviceListFrame, command=self.addNewNodeOnClick, text="Create New Node" if Util.OS == "Windows" else "Create Node", image=Util.imageGenerator(
             "icon_plus.png", 20), corner_radius=Util.CORNER_RADIUS, compound="right", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Regular), fg_color=Util.COLOR_GREEN_1, hover_color=Util.COLOR_GREEN_2)
@@ -1015,9 +1019,13 @@ class CardFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        cardReadingProcess = Thread(target=self.cardReading)
-        cardReadingProcess.daemon = True
-        cardReadingProcess.start()
+        if Util.READER_STATUS == False:
+            print("starting reader")
+            Util.READER_STATUS = True
+            cardReadingProcess = Thread(target=self.cardReading)
+            cardReadingProcess.daemon = True
+            cardReadingProcess.start()
+            #cardReadingProcess.stop()
 
         self.credentialFrame = customtkinter.CTkFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
@@ -1081,18 +1089,25 @@ class CardFrames(customtkinter.CTkFrame):
         pass
 
     def cardReading(self):
-        no = 0
-        while True:
-            # Dummy code, change with rfid in RPI
-            print("Try read RFID")
-            if (no == 50):
-                self.cardIdForm.configure(state="normal")
-                self.cardIdForm.configure(placeholder_text="aa")
-                self.cardIdForm.configure(state="disable")
-                print("CARD FOUND")
-
+        #no = 0
+        while Util.READER_STATUS:
+            try:
+                id, text = Util.READER.read()
+                print(id)
+                #self.cardIdForm.configure(state="normal")
+                #self.cardIdForm.configure(placeholder_text=id)
+                #self.cardIdForm.configure(state="disable")
+            finally:
+                GPIO.cleanup()
+           #Dummy code, change with rfid in RPI
+           #print("Try read RFID")
+            #if (no == 50):
+                #self.cardIdForm.configure(state="normal")
+                #self.cardIdForm.configure(placeholder_text="aa")
+                #self.cardIdForm.configure(state="disable")
+                #print("CARD FOUND")
             time.sleep(0.1)
-            no += 1
+            #no += 1
 
 
 class Toast(customtkinter.CTkFrame):
