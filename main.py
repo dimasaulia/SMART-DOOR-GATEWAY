@@ -68,8 +68,9 @@ class Util():
     if OS == "Linux":
         APP_WIDTH = 800
         APP_HEIGHT = 400
+        pn532 = Pn532_i2c()
+        pn532.SAMconfigure()
         READER = Mifare()
-        #READER = MFRC522()
         READER_STATUS = False
         FONT = DotDict({
             "Light": "Cantarell Thin",
