@@ -10,8 +10,11 @@ import serial
 import serial.tools.list_ports
 import time
 import RPi.GPIO as GPIO
-from mfrc522 import SimpleMFRC522
-#from mfrc522 import MFRC522
+import binascii
+from py532lib.i2c import *
+from py532lib.frame import *
+from py532lib.constants import *
+from py532lib.mifare import *
 from threading import Thread, Event, Timer
 from signal import SIGINT, signal
 from datetime import datetime, timedelta, timezone
@@ -65,7 +68,7 @@ class Util():
     if OS == "Linux":
         APP_WIDTH = 800
         APP_HEIGHT = 400
-        READER = SimpleMFRC522()
+        READER = Mifare()
         #READER = MFRC522()
         READER_STATUS = False
         FONT = DotDict({
@@ -1095,66 +1098,22 @@ class CardFrames(customtkinter.CTkFrame):
         pass
 
     def cardReading(self):
-        #no = 0
         while True:
             try:
-                id, text = Util.READER.read()
-                id_hex = '{0:x}'.format(id)
-                print("ID:",id_hex)
-                
+                id = Util.READER.scan_field()
+                id_hex = binascii.hexlify(id).decode()
+                #print("HEX", id_hex)
                 Util.CARD_FORM.configure(state="normal")
                 Util.CARD_FORM.configure(placeholder_text=id_hex)
                 Util.CARD_FORM.configure(state="disable")
-                #GPIO.cleanup()
-                '''
-                # 2    
-                (status, TagType) = Util.READER.Request(Util.READER.PICC_REQIDL)
-                if status == Util.READER.MI_OK:
-                    print("Connection Success!")
-                
-                # 3
-                (status, uid) = Util.READER.Anticoll()
-                if status == Util.READER.MI_OK:
-                    print(uid)
-                
-                # 4
-                #Util.READER.SelectTag(uid)
-                
-                # 5
-                trailer_block = 11
-                #This is the default key for MIFARE Cards
-                key = [0xFF, 0xFF, 0xFF , 0xFF, 0xFF, 0xFF]
-                status = Util.READER.Authenticate(
-                        Util.READER.PICC_AUTHENT1A, trailer_block , key, uid)
-                        
-                
-                # 6
-                block_nums = [8, 9, 10]
-                data = []
-                for block_num in block_nums:
-                    block_data = Util.READER.ReadTag(block_num)
-                    if block_data:
-                        data += block_data
-                if data:
-                    print(''.join(chr(i) for i in data))
 
-                '''
-            #except:
-            #   print("restarting")
-            #   GPIO.cleanup()
-            #   break
+            except:
+               #print("restarting")
+               GPIO.cleanup()
+               break
             finally:
-                #print("finish")
                 GPIO.cleanup()
-           #Dummy code, change with rfid in RPI
-           #print("Try read RFID")
-            #if (no == 50):
-                #self.cardIdForm.configure(state="normal")
-                #self.cardIdForm.configure(placeholder_text="aa")
-                #self.cardIdForm.configure(state="disable")
-                #print("CARD FOUND")
-            #time.sleep(0.1)
-            #no += 1
+  
         #print("waking up rfid again")
         cardReadingProcess = Thread(target=self.cardReading)
         cardReadingProcess.daemon = True
