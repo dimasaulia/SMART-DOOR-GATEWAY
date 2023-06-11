@@ -46,7 +46,7 @@ class Util():
         os.path.realpath(__file__)), "static")
 
     OS = platform.system()
-    URL = "http://192.168.226.130:8000"
+    URL = "http://192.168.1.130:8000"
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -323,8 +323,8 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, width=120, **kwargs)
         self.stopEvent = Event()
-        # self.t = Timer(30*60, self.autoLogout, ())
-        # self.t.start()
+        self.t = Timer(30*60, self.autoLogout, ())
+        self.t.start()
 
         self.master = master
         master.grid_rowconfigure(0, weight=1)  # configure grid system
@@ -374,10 +374,13 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
             child.configure(fg_color="transparent")
         item.configure(fg_color=Util.COLOR_BLUE_1)
         state = item.cget("text")
-        # self.t.cancel()
-        # self.t = Timer(15, self.autoLogout, ())
-        # self.t.start()
+        
+        self.t.cancel()
+        self.t = Timer(30*60, self.autoLogout, ())
+        self.t.start()
+        
         Util.CURRENT_FRAME = state
+        
         if state == "Home":
             print(" [!main]: Render Home Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
@@ -417,10 +420,11 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
         self.logoutRedirect()
 
     def logoutRedirect(self):
-        # self.t.cancel()
+        self.t.cancel()
         Util.frameSwitcher(originFrame=self.master.winfo_children()[
             1], destinationFrame=LoginFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
         Util.frameDestroyer(self.master.winfo_children()[0])
+ 
 
 
 class HomeFrames(customtkinter.CTkFrame):
@@ -1036,7 +1040,7 @@ class CardFrames(customtkinter.CTkFrame):
             cardReadingProcess.daemon = True
             cardReadingProcess.start()
 
-        self.credentialFrame = customtkinter.CTkFrame(
+        self.credentialFrame = customtkinter.CTkScrollableFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
         self.credentialFrame.grid(
             row=0, column=0, sticky="nswe", padx=[0, 20])
@@ -1072,6 +1076,10 @@ class CardFrames(customtkinter.CTkFrame):
         self.submitButton = customtkinter.CTkButton(master=self.credentialFrame, width=350, height=45, text="Save", fg_color=Util.COLOR_GREEN_1,
                                                     hover_color=Util.COLOR_GREEN_2, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), command=self.saveOnClick)
         self.submitButton.pack(anchor="w", padx=[20, 20], pady=10, fill="both")
+        
+        self.clearButton = customtkinter.CTkButton(master=self.credentialFrame, width=350, height=45, text="Clear", fg_color=Util.COLOR_RED_2,
+                                                    hover_color=Util.COLOR_RED_1, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), command=self.clearOnClick)
+        self.clearButton.pack(anchor="w", padx=[20, 20], pady=[0,10], fill="both")
 
         self.aboutFrame = customtkinter.CTkFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
@@ -1096,8 +1104,35 @@ class CardFrames(customtkinter.CTkFrame):
                                    padx=[20, 20], pady=0)
 
     def saveOnClick(self):
-        pass
+        self.username = self.cardOwnerForm.get()
+        self.cardNumber = Util.CARD_FORM.get()
+        self.pin = self.cardPinForm.get()
+        print("USERNAME:",self.username)
+        print("PIN:",self.pin)
+        print("ID:",self.cardNumber)
+        self.registerResp = requests.post(
+            f"{Util.URL}/api/v1/gateway/device/h/register-card", headers=header,json={'username': self.username, 'cardNumber': self.cardNumber, 'pin':self.pin})
+        print("HTTP CODE", self.registerResp.status_code)
+        #print("HTTP DATA", self.registerResp.json())
+        if self.registerResp.status_code == 200:
+            Toast(master=self.master, color=Util.COLOR_GREEN_1,
+                  errMsg="Success Register New Card")
+        
+        if self.registerResp.status_code != 200:
+            self.registerRespData = self.registerResp.json()
+            Toast(master=self.master, color=Util.COLOR_RED_1,
+                  errMsg=self.registerRespData["data"]["errors"])
 
+    def clearOnClick(self):
+        self.cardOwnerForm.delete(0,customtkinter.END)
+        self.cardOwnerForm.configure(placeholder_text="Optional to proivde card owner (username)")
+        Util.CARD_FORM.configure(state="normal")
+        Util.CARD_FORM.delete(0,customtkinter.END)
+        Util.CARD_FORM.configure(placeholder_text="Card ID will appear here when card detected")
+        Util.CARD_FORM.configure(state="disable")
+        self.cardPinForm.delete(0,customtkinter.END)
+        self.cardPinForm.configure(placeholder_text="Optional to proivde card pin")
+        
     def cardReading(self):
         while True:
             try:
@@ -1105,7 +1140,8 @@ class CardFrames(customtkinter.CTkFrame):
                 id_hex = binascii.hexlify(id).decode()
                 #print("HEX", id_hex)
                 Util.CARD_FORM.configure(state="normal")
-                Util.CARD_FORM.configure(placeholder_text=id_hex)
+                Util.CARD_FORM.delete(0,customtkinter.END)
+                Util.CARD_FORM.insert(0,id_hex)
                 Util.CARD_FORM.configure(state="disable")
 
             except:
@@ -1171,14 +1207,14 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        self.cancelPingDaeomon = SetInterval(25*60, Util.pingServer)
-        # loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
-        # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.cancelPingDaeomon = SetInterval(10*60, Util.pingServer)
+        loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
+        loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        self.sideBarFrame = SideBarFrames(
-            master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
-        self.sideBarFrame.grid(row=0, column=0, padx=[
-                               20, 0], pady=20, sticky="nwsw")
+        #self.sideBarFrame = SideBarFrames(
+        #    master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        #self.sideBarFrame.grid(row=0, column=0, padx=[
+        #                       20, 0], pady=20, sticky="nwsw")
 
 
 if __name__ == "__main__":
@@ -1187,4 +1223,4 @@ if __name__ == "__main__":
     mainApp.start()
     print("Try to cancel ping")
     # for development, when app close system stop pinging server
-    app.cancelPingDaeomon.cancel()
+    #app.cancelPingDaeomon.cancel() #if this line of code uncomment, ping daemon will stop when main app stop, it is recommended to comment this line of code
