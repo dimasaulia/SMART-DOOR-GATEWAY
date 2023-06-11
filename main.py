@@ -105,6 +105,7 @@ class Util():
 
     @staticmethod
     def pingServer():
+        print("----- Ctrl C to stop ping daemon -----")
         print("Try Connect To Server for Updating Gateway Online Time....")
         gatewayInfo = Gateway.select().dicts()
         online = requests.post(
@@ -117,12 +118,16 @@ class Util():
         for node in nodes:
             nodeShortId = node["shortId"]
             nodeAccumulativeResponseTime = Variable.getLog(nodeShortId)
+            #if(nodeAccumulativeResponseTime == None):
+            #   print("Cant find response time data or node log, skiping the process...")
+            #   continue
+                
             print(
                 f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
             nodeOnline = requests.post(
                 f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
                     "duid": nodeShortId,
-                    "responsesTime": nodeAccumulativeResponseTime
+                    "responsesTime": nodeAccumulativeResponseTime if nodeAccumulativeResponseTime != None else ""
                 })
             if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
                 print(f"Success Update Node {nodeShortId} Online Time")
@@ -202,10 +207,10 @@ class LoginFrames(customtkinter.CTkFrame):
     def fetchLogin(self):
         username = self.usernameForm.get()
         paasword = self.passwordForm.get()
-        resp = requests.post(f"{Util.URL}/api/v1/user/login",
-                             json={'username': username, 'password': paasword})
+        self.resp = requests.post(f"{Util.URL}/api/v1/gateway/device/h/login",
+                             json={'username': username, 'password': paasword},headers=header)
 
-        if (resp.status_code == 200):
+        if (self.resp.status_code == 200):
             data = []
             datas = Gateway.select().dicts()
 
@@ -238,9 +243,10 @@ class LoginFrames(customtkinter.CTkFrame):
                     if (gatewayResp.status_code == 200):
                         self.redirectPage()
 
-        if (resp.status_code != 200):
+        if (self.resp.status_code != 200):
+            self.respError = self.resp.json()
             Toast(master=self.master, color=Util.COLOR_RED_1,
-                  errMsg="Username and Password Not Match")
+                  errMsg=self.respError["data"]["errors"])
 
     def initializeGateway(self):
         gatewayResp = requests.post(
@@ -1207,7 +1213,7 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        self.cancelPingDaeomon = SetInterval(10*60, Util.pingServer)
+        self.cancelPingDaeomon = SetInterval(0.5*60, Util.pingServer)
         loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
         loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
@@ -1221,6 +1227,7 @@ if __name__ == "__main__":
     app = App()
     mainApp = Thread(target=app.mainloop())
     mainApp.start()
-    print("Try to cancel ping")
+    print("Ctrl C to cancel ping daemon")
+    #print("Try to cancel ping")
     # for development, when app close system stop pinging server
     #app.cancelPingDaeomon.cancel() #if this line of code uncomment, ping daemon will stop when main app stop, it is recommended to comment this line of code
