@@ -85,7 +85,10 @@ class Variable():
             VARIABLE_DATA[finalDeviceId]["responseTime"] = VARIABLE_DATA[finalDeviceId]["responseTime"] + responseTime
         except:
             # IF EMPTY
-            VARIABLE_DATA[finalDeviceId] = {"responseTime":responseTime}
+            if(not VARIABLE_DATA):
+                VARIABLE_DATA[finalDeviceId] = {}
+                
+            VARIABLE_DATA[finalDeviceId]["responseTime"] = responseTime
         Variable.writeFile(VARIABLE_DATA, "log.json")
 
     @staticmethod
@@ -104,5 +107,27 @@ class Variable():
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
             return VARIABLE_DATA[finalDeviceId]["responseTime"]
+        except:
+            return None
+        
+    @staticmethod
+    def setNodeLastOnlineTime(deviceId, time):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            VARIABLE_DATA[finalDeviceId]["lastOnline"] = time
+        except:
+            # IF EMPTY
+            if(not VARIABLE_DATA):
+                VARIABLE_DATA[finalDeviceId] = {}
+
+            VARIABLE_DATA[finalDeviceId]["lastOnline"] = time
+        Variable.writeFile(VARIABLE_DATA, "log.json")
+    
+    def getNodeLastOnlineTime(deviceId):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            return VARIABLE_DATA[finalDeviceId]["lastOnline"]
         except:
             return None

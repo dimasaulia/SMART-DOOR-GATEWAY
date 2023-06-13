@@ -432,7 +432,6 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
         Util.frameDestroyer(self.master.winfo_children()[0])
  
 
-
 class HomeFrames(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
