@@ -95,10 +95,14 @@ class Variable():
     def reSetResponseTimeLog(deviceId):
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
-            VARIABLE_DATA[deviceId] = {"responseTime":""}
+            VARIABLE_DATA[deviceId]["responseTime"] = ""
         except:
             # IF EMPTY
-            VARIABLE_DATA[deviceId] = {"responseTime":""}
+            if(not VARIABLE_DATA):
+                VARIABLE_DATA[deviceId] = {}
+                VARIABLE_DATA[deviceId]["responseTime"] = ""
+
+            VARIABLE_DATA[deviceId]["responseTime"] = ""
         Variable.writeFile(VARIABLE_DATA, "log.json")
 
     @staticmethod
@@ -123,11 +127,48 @@ class Variable():
 
             VARIABLE_DATA[finalDeviceId]["lastOnline"] = time
         Variable.writeFile(VARIABLE_DATA, "log.json")
-    
+
+    @staticmethod  
     def getNodeLastOnlineTime(deviceId):
         finalDeviceId = str(deviceId).replace("NODE-", "")
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
             return VARIABLE_DATA[finalDeviceId]["lastOnline"]
+        except:
+            return None
+    
+    @staticmethod
+    def setAuthenticationResponseLog(deviceId, authenticationData):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            VARIABLE_DATA[finalDeviceId]["authenticationData"] = VARIABLE_DATA[finalDeviceId]["authenticationData"] + authenticationData
+        except:
+            # IF EMPTY
+            if(not VARIABLE_DATA):
+                VARIABLE_DATA[finalDeviceId] = {}
+                
+            VARIABLE_DATA[finalDeviceId]["authenticationData"] = authenticationData
+        Variable.writeFile(VARIABLE_DATA, "log.json")
+    
+    @staticmethod
+    def reSetAuthenticationResponseLog(deviceId):
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            VARIABLE_DATA[deviceId]["authenticationData"] = ""
+        except:
+            # IF EMPTY
+            if(not VARIABLE_DATA):
+                VARIABLE_DATA[deviceId] = {}
+                VARIABLE_DATA[deviceId]["authenticationData"] = ""
+            VARIABLE_DATA[deviceId]["authenticationData"] = ""
+        Variable.writeFile(VARIABLE_DATA, "log.json")
+    
+    @staticmethod
+    def getAuthenticationResponseLog(deviceId):
+        finalDeviceId = str(deviceId).replace("NODE-", "")
+        VARIABLE_DATA = Variable.readFile("log.json")
+        try:
+            return VARIABLE_DATA[finalDeviceId]["authenticationData"]
         except:
             return None

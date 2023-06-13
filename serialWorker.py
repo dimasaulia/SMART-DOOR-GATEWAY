@@ -91,6 +91,8 @@ while True:
                 if (data["type"] == "connectionping"):
                     print("[G]: Update Online Time")
                     Variable.setResponseTimeLog(data["source"], data["auth"])
+                    current_date = datetime.now()
+                    Variable.setNodeLastOnlineTime(data["source"], current_date.isoformat())
                     resp = updateNodeOnlineTime(payload=payloadArray[1])
                     print(f"[G]: {resp}")
 
