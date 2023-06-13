@@ -9,20 +9,21 @@ import psutil
 import serial
 import serial.tools.list_ports
 import time
-import RPi.GPIO as GPIO
+if platform.machine() == "armv71" or platform.machine() == "armv61":
+    import RPi.GPIO as GPIO
+    from py532lib.i2c import *
+    from py532lib.frame import *
+    from py532lib.constants import *
+    from py532lib.mifare import *
 import binascii
-from py532lib.i2c import *
-from py532lib.frame import *
-from py532lib.constants import *
-from py532lib.mifare import *
 from threading import Thread, Event, Timer
 from signal import SIGINT, signal
 from datetime import datetime, timedelta, timezone
 from database.scheme import Credential, Gateway, Node, Card, AccessRole, db
-from secret.secret import header
+from secret.secret import header, HTTP_SERVER
 from variable import *
 from peewee import *
-
+from logHandler import setup_logging
 
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""
@@ -46,7 +47,8 @@ class Util():
         os.path.realpath(__file__)), "static")
 
     OS = platform.system()
-    URL = "http://192.168.1.130:8000"
+    URL = HTTP_SERVER
+    PING_INTERVAL = 0.1 #in minutes
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -64,14 +66,20 @@ class Util():
     CORNER_RADIUS = 15
     CURRENT_FRAME = ""
     CARD_FORM = ""
-
+    
     if OS == "Linux":
-        APP_WIDTH = 800
-        APP_HEIGHT = 400
-        pn532 = Pn532_i2c()
-        pn532.SAMconfigure()
-        READER = Mifare()
-        READER_STATUS = False
+        if platform.machine() != "armv71" or platform.machine() != "armv61":
+            APP_WIDTH = 1280
+            APP_HEIGHT = 720
+
+        if platform.machine() == "armv71" or platform.machine() == "armv61":
+            APP_WIDTH = 800
+            APP_HEIGHT = 400
+            pn532 = Pn532_i2c()
+            pn532.SAMconfigure()
+            READER = Mifare()
+            READER_STATUS = False
+
         FONT = DotDict({
             "Light": "Cantarell Thin",
             "Regular": "Cantarell",
@@ -105,33 +113,57 @@ class Util():
 
     @staticmethod
     def pingServer():
-        print("----- Ctrl C to stop ping daemon -----")
-        print("Try Connect To Server for Updating Gateway Online Time....")
-        gatewayInfo = Gateway.select().dicts()
-        online = requests.post(
-            f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
-        if (online.status_code == 200):  # jika perangkat masih online, maka redirect
-            print("Success Update Gateway Online Time")
+        logger = setup_logging()
+        # nodeShortId = None
+        try:
+            print("----- Ctrl C to stop ping daemon -----")
+            print("Try Connect To Server for Updating Gateway Online Time")
+            gatewayInfo = Gateway.select().dicts()
+            online = requests.post(
+                f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
+            if (online.status_code == 200):  # jika perangkat masih online, maka redirect
+                print("Success Update Gateway Online Time")
 
-        nodes = Node.select().dicts()
+            nodes = Node.select().dicts()
 
-        for node in nodes:
-            nodeShortId = node["shortId"]
-            nodeAccumulativeResponseTime = Variable.getResponseTimeLog(nodeShortId)
-            #if(nodeAccumulativeResponseTime == None):
-            #   print("Cant find response time data or node log, skiping the process...")
-            #   continue
+            for node in nodes:
+                global nodeShortId 
+                nodeShortId = node["shortId"]
+                nodeAccumulativeResponseTime = Variable.getResponseTimeLog(nodeShortId)
+
+                print(
+                    f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
+                logger.info(f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} Online Time.")
+                nodeOnline = requests.post(
+                    f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
+                        "duid": nodeShortId,
+                        "lastOnline": node["lastOnline"] if node["lastOnline"] != None else None,
+                        "responsesTime": nodeAccumulativeResponseTime if nodeAccumulativeResponseTime != None else ""
+                    })
+                if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
+                    print(f"Success Update Node {nodeShortId} Online Time")
+                    Variable.reSetResponseTimeLog(nodeShortId)  # reset log for spesific node
+                    logger.info(f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} Online Time")
+
                 
-            print(
-                f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
-            nodeOnline = requests.post(
-                f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
-                    "duid": nodeShortId,
-                    "responsesTime": nodeAccumulativeResponseTime if nodeAccumulativeResponseTime != None else ""
-                })
-            if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
-                print(f"Success Update Node {nodeShortId} Online Time")
-                Variable.reSetResponseTimeLog(nodeShortId)  # reset log for spesific node
+                historys = Variable.getAuthenticationResponseLog(nodeShortId)
+                if(not(historys == None or len(historys) == 0)):
+                    print(
+                        f"Try Connect To Server for Updating Node {nodeShortId} History....")
+                    logger.info(f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} History")
+                    bulkNodeOnline = requests.post(
+                        f"{Util.URL}/api/v1/gateway/device/h/history/bulk", headers=header, json={
+                            "historys": historys,
+                        })
+                    if (bulkNodeOnline.status_code == 200):  
+                        print(f"Success Update Node {nodeShortId} History (Bulk)")
+                        Variable.reSetAuthenticationResponseLog(nodeShortId)  # reset log for spesific node
+                        logger.info(f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} History (Bulk)")
+                
+
+        except:
+            print("Failed connect to server")
+            logger.error(f"[MAIN] - PING_DAEMON - failed connect to server, data buffer to log")
 
     @staticmethod
     def frameDestroyer(fr):
@@ -1037,13 +1069,14 @@ class CardFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        if Util.READER_STATUS == False:
-        #if True:
-            print("starting reader")
-            Util.READER_STATUS = True
-            cardReadingProcess = Thread(target=self.cardReading)
-            cardReadingProcess.daemon = True
-            cardReadingProcess.start()
+        if platform.machine() == "armv71" or platform.machine() == "armv61":
+            if Util.READER_STATUS == False:
+            #if True:
+                print("starting reader")
+                Util.READER_STATUS = True
+                cardReadingProcess = Thread(target=self.cardReading)
+                cardReadingProcess.daemon = True
+                cardReadingProcess.start()
 
         self.credentialFrame = customtkinter.CTkScrollableFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
@@ -1094,6 +1127,8 @@ class CardFrames(customtkinter.CTkFrame):
             master=self.aboutFrame, text_color=Util.COLOR_NEUTRAL_5, text="Instruction", font=(Util.FONT.Bold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
         self.aboutLabel.pack(anchor="w", fill="both",
                              padx=[20, 20], pady=10)
+        if platform.machine() != "armv71" or platform.machine() != "armv61":
+            self.information("THIS FUNCTION WILL NOT RUN ON YOUR DEVICE. THIS FUNCTION ONLY RUN ON RASPBERRY PI HARDWARE")
         self.information("1. Please tap your card on RFID Reader")
         self.information(
             "2. If you want activate two step authentication, please fill PIN form")
@@ -1139,7 +1174,7 @@ class CardFrames(customtkinter.CTkFrame):
         self.cardPinForm.configure(placeholder_text="Optional to proivde card pin")
         
     def cardReading(self):
-        while True:
+        while True and platform.machine() == "armv71" or platform.machine() == "armv61":
             try:
                 id = Util.READER.scan_field()
                 id_hex = binascii.hexlify(id).decode()
@@ -1207,12 +1242,12 @@ class SetInterval:
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-        self.geometry(f"{Util.APP_WIDTH}x{Util.APP_HEIGHT}")
+        self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}")
         self.title("Smart Door App")
-        self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
+        self.minsize(self.winfo_screenwidth(), self.winfo_screenheight())
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        self.cancelPingDaeomon = SetInterval(0.5*60, Util.pingServer)
+        self.cancelPingDaeomon = SetInterval(Util.PING_INTERVAL * 60, Util.pingServer)
         loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
         loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 

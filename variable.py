@@ -98,9 +98,12 @@ class Variable():
             VARIABLE_DATA[deviceId]["responseTime"] = ""
         except:
             # IF EMPTY
-            if(not VARIABLE_DATA):
+            if(VARIABLE_DATA):
                 VARIABLE_DATA[deviceId] = {}
                 VARIABLE_DATA[deviceId]["responseTime"] = ""
+
+            if deviceId not in VARIABLE_DATA:
+                VARIABLE_DATA[deviceId] = {}
 
             VARIABLE_DATA[deviceId]["responseTime"] = ""
         Variable.writeFile(VARIABLE_DATA, "log.json")
@@ -142,13 +145,13 @@ class Variable():
         finalDeviceId = str(deviceId).replace("NODE-", "")
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
-            VARIABLE_DATA[finalDeviceId]["authenticationData"] = VARIABLE_DATA[finalDeviceId]["authenticationData"] + authenticationData
+            someList = (VARIABLE_DATA[finalDeviceId]["authenticationData"]).append(authenticationData)
         except:
             # IF EMPTY
             if(not VARIABLE_DATA):
                 VARIABLE_DATA[finalDeviceId] = {}
                 
-            VARIABLE_DATA[finalDeviceId]["authenticationData"] = authenticationData
+            VARIABLE_DATA[finalDeviceId]["authenticationData"] = [authenticationData]
         Variable.writeFile(VARIABLE_DATA, "log.json")
     
     @staticmethod
@@ -161,6 +164,10 @@ class Variable():
             if(not VARIABLE_DATA):
                 VARIABLE_DATA[deviceId] = {}
                 VARIABLE_DATA[deviceId]["authenticationData"] = ""
+            
+            if deviceId not in VARIABLE_DATA:
+                VARIABLE_DATA[deviceId] = {}
+                
             VARIABLE_DATA[deviceId]["authenticationData"] = ""
         Variable.writeFile(VARIABLE_DATA, "log.json")
     
