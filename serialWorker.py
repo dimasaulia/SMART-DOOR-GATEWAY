@@ -79,7 +79,6 @@ while True:
                 payloadArray = serialString.split(".")
                 data = json.loads(payloadArray[1])
                 if (data["type"] == "auth"):
-                    Variable.setRequestLog(data["source"], data["msgid"])
                     print("[G]: Waiting For Auth")
                     resp = cardAuth(payload=payloadArray[1])
                     print(f"[G]: {resp}")

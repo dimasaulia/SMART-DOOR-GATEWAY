@@ -106,23 +106,3 @@ class Variable():
             return VARIABLE_DATA[finalDeviceId]
         except:
             return None
-
-    @staticmethod
-    def setRequestLog(deviceId, msgId):
-        finalDeviceId = str(deviceId).replace("NODE-", "")
-        VARIABLE_DATA = Variable.readFile("requestLog.json")
-        try:
-            VARIABLE_DATA[finalDeviceId] = VARIABLE_DATA[finalDeviceId] + msgId + ","
-        except:
-            # IF EMPTY
-            VARIABLE_DATA[finalDeviceId] = msgId + ","
-        Variable.writeFile(VARIABLE_DATA, "requestLog.json")
-
-    @staticmethod
-    def getRequestLog(deviceId):
-        finalDeviceId = str(deviceId).replace("NODE-", "")
-        VARIABLE_DATA = Variable.readFile("log.json")
-        try:
-            return VARIABLE_DATA[finalDeviceId]
-        except:
-            return None
