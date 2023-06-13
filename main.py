@@ -117,7 +117,7 @@ class Util():
 
         for node in nodes:
             nodeShortId = node["shortId"]
-            nodeAccumulativeResponseTime = Variable.getLog(nodeShortId)
+            nodeAccumulativeResponseTime = Variable.getResponseTimeLog(nodeShortId)
             #if(nodeAccumulativeResponseTime == None):
             #   print("Cant find response time data or node log, skiping the process...")
             #   continue
@@ -131,7 +131,7 @@ class Util():
                 })
             if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
                 print(f"Success Update Node {nodeShortId} Online Time")
-                Variable.reSetLog(nodeShortId)  # reset log for spesific node
+                Variable.reSetResponseTimeLog(nodeShortId)  # reset log for spesific node
 
     @staticmethod
     def frameDestroyer(fr):

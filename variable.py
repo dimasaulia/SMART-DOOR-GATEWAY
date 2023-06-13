@@ -78,31 +78,31 @@ class Variable():
         Variable.writeFile(VARIABLE_DATA)
 
     @staticmethod
-    def setLog(deviceId, responseTime):
+    def setResponseTimeLog(deviceId, responseTime):
         finalDeviceId = str(deviceId).replace("NODE-", "")
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
-            VARIABLE_DATA[finalDeviceId] = VARIABLE_DATA[finalDeviceId] + responseTime
+            VARIABLE_DATA[finalDeviceId]["responseTime"] = VARIABLE_DATA[finalDeviceId]["responseTime"] + responseTime
         except:
             # IF EMPTY
-            VARIABLE_DATA[finalDeviceId] = responseTime
+            VARIABLE_DATA[finalDeviceId] = {"responseTime":responseTime}
         Variable.writeFile(VARIABLE_DATA, "log.json")
 
     @staticmethod
-    def reSetLog(deviceId):
+    def reSetResponseTimeLog(deviceId):
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
-            VARIABLE_DATA[deviceId] = ""
+            VARIABLE_DATA[deviceId] = {"responseTime":""}
         except:
             # IF EMPTY
-            VARIABLE_DATA[deviceId] = ""
+            VARIABLE_DATA[deviceId] = {"responseTime":""}
         Variable.writeFile(VARIABLE_DATA, "log.json")
 
     @staticmethod
-    def getLog(deviceId):
+    def getResponseTimeLog(deviceId):
         finalDeviceId = str(deviceId).replace("NODE-", "")
         VARIABLE_DATA = Variable.readFile("log.json")
         try:
-            return VARIABLE_DATA[finalDeviceId]
+            return VARIABLE_DATA[finalDeviceId]["responseTime"]
         except:
             return None

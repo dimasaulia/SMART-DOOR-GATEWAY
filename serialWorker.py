@@ -90,7 +90,7 @@ while True:
                 data = json.loads(payloadArray[1])
                 if (data["type"] == "connectionping"):
                     print("[G]: Update Online Time")
-                    Variable.setLog(data["source"], data["auth"])
+                    Variable.setResponseTimeLog(data["source"], data["auth"])
                     resp = updateNodeOnlineTime(payload=payloadArray[1])
                     print(f"[G]: {resp}")
 
