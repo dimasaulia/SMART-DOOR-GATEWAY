@@ -88,7 +88,7 @@ while True:
                     logger.info(f"[SERIAL] - AUTHENTICATION - {resp}")
                     serialDebug.write(bytes(f"{resp}", 'utf-8'))
                     # Send Data To Server
-                    requestToServer=threading.Thread(target=sendRoomHistory(),args=(data["card"]["id"],data["source"],json.loads(resp)["success"],))
+                    requestToServer=threading.Thread(target=sendRoomHistory,args=(data["card"]["id"],str(data["source"]).replace("NODE-",""),json.loads(resp)["success"],))
                     requestToServer.start()
                     # requestToServer.join()
 

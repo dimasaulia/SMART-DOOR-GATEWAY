@@ -9,7 +9,7 @@ import psutil
 import serial
 import serial.tools.list_ports
 import time
-if platform.machine() == "armv71" or platform.machine() == "armv61":
+if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
     import RPi.GPIO as GPIO
     from py532lib.i2c import *
     from py532lib.frame import *
@@ -48,7 +48,7 @@ class Util():
 
     OS = platform.system()
     URL = HTTP_SERVER
-    PING_INTERVAL = 0.1 #in minutes
+    PING_INTERVAL = 10 #in minutes
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -68,11 +68,11 @@ class Util():
     CARD_FORM = ""
     
     if OS == "Linux":
-        if platform.machine() != "armv71" or platform.machine() != "armv61":
+        if not(platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64"): 
             APP_WIDTH = 1280
             APP_HEIGHT = 720
 
-        if platform.machine() == "armv71" or platform.machine() == "armv61":
+        if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
             APP_WIDTH = 800
             APP_HEIGHT = 400
             pn532 = Pn532_i2c()
@@ -1069,7 +1069,7 @@ class CardFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        if platform.machine() == "armv71" or platform.machine() == "armv61":
+        if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
             if Util.READER_STATUS == False:
             #if True:
                 print("starting reader")
@@ -1127,7 +1127,7 @@ class CardFrames(customtkinter.CTkFrame):
             master=self.aboutFrame, text_color=Util.COLOR_NEUTRAL_5, text="Instruction", font=(Util.FONT.Bold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
         self.aboutLabel.pack(anchor="w", fill="both",
                              padx=[20, 20], pady=10)
-        if platform.machine() != "armv71" or platform.machine() != "armv61":
+        if not(platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64"):
             self.information("THIS FUNCTION WILL NOT RUN ON YOUR DEVICE. THIS FUNCTION ONLY RUN ON RASPBERRY PI HARDWARE")
         self.information("1. Please tap your card on RFID Reader")
         self.information(
@@ -1174,7 +1174,7 @@ class CardFrames(customtkinter.CTkFrame):
         self.cardPinForm.configure(placeholder_text="Optional to proivde card pin")
         
     def cardReading(self):
-        while True and platform.machine() == "armv71" or platform.machine() == "armv61":
+        while True and platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
             try:
                 id = Util.READER.scan_field()
                 id_hex = binascii.hexlify(id).decode()
@@ -1242,9 +1242,9 @@ class SetInterval:
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-        self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}")
+        self.geometry(f"{Util.APP_WIDTH}x{Util.APP_HEIGHT}")
         self.title("Smart Door App")
-        self.minsize(self.winfo_screenwidth(), self.winfo_screenheight())
+        self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
         self.cancelPingDaeomon = SetInterval(Util.PING_INTERVAL * 60, Util.pingServer)
