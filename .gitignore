@@ -5,3 +5,4 @@ database/__pycache__
 env
 venv
 log_file.txt
+./log_file.txt

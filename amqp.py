@@ -41,21 +41,21 @@ print(f" [!amqp]: PID={os.getpid()}")
 Variable.setSyncPid(os.getpid())
 
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
-                   queue=queue_name, routing_key=f"setup.{gatewayShortId}.gateway")
+                   queue=queue_name, routing_key=f"setup/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
-                   queue=queue_name, routing_key=f"reset.{gatewayShortId}.gateway")
+                   queue=queue_name, routing_key=f"reset/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"setuproom.{gatewayShortId}.gateway")
+                   routing_key=f"setuproom/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"resetroom.{gatewayShortId}.gateway")
+                   routing_key=f"resetroom/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"removeroom.{gatewayShortId}.gateway")
+                   routing_key=f"removeroom/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
-                   queue=queue_name, routing_key=f"addcard.{gatewayShortId}.gateway")
+                   queue=queue_name, routing_key=f"addcard/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"removecard.{gatewayShortId}.gateway")
+                   routing_key=f"removecard/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"updatecard.{gatewayShortId}.gateway")
+                   routing_key=f"updatecard/{gatewayShortId}/gateway")
 
 node_DB = Node.select().dicts()
 devices = []
