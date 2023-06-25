@@ -69,7 +69,7 @@ class Util():
     
     if OS == "Linux":
         if not(platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64"): 
-            APP_WIDTH = 1280
+            APP_WIDTH = 960
             APP_HEIGHT = 720
 
         if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
