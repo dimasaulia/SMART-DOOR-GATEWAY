@@ -6,3 +6,5 @@ env
 venv
 log_file.txt
 ./log_file.txt
+__pycache__
+.vscode
