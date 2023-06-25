@@ -40,7 +40,7 @@ class Util():
         os.path.realpath(__file__)), "static")
 
     OS = platform.system()
-    URL = "http://192.168.226.130:8000"
+    URL = "http://192.168.155.130:8000"
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -1147,13 +1147,13 @@ class App(customtkinter.CTk):
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
         self.cancelPingDaeomon = SetInterval(25*60, Util.pingServer)
-        # loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
-        # loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
+        loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        self.sideBarFrame = SideBarFrames(
-            master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
-        self.sideBarFrame.grid(row=0, column=0, padx=[
-                               20, 0], pady=20, sticky="nwsw")
+        # self.sideBarFrame = SideBarFrames(
+        #     master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        # self.sideBarFrame.grid(row=0, column=0, padx=[
+        #                        20, 0], pady=20, sticky="nwsw")
 
 
 if __name__ == "__main__":
