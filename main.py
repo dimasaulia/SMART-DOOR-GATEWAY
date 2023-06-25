@@ -9,13 +9,21 @@ import psutil
 import serial
 import serial.tools.list_ports
 import time
+if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
+    import RPi.GPIO as GPIO
+    from py532lib.i2c import *
+    from py532lib.frame import *
+    from py532lib.constants import *
+    from py532lib.mifare import *
+import binascii
 from threading import Thread, Event, Timer
 from signal import SIGINT, signal
 from datetime import datetime, timedelta, timezone
 from database.scheme import Credential, Gateway, Node, Card, AccessRole, db
-from secret.secret import header
+from secret.secret import header, HTTP_SERVER
 from variable import *
 from peewee import *
+from logHandler import setup_logging
 
 
 class DotDict(dict):
@@ -40,7 +48,8 @@ class Util():
         os.path.realpath(__file__)), "static")
 
     OS = platform.system()
-    URL = "http://192.168.155.130:8000"
+    URL = HTTP_SERVER
+    PING_INTERVAL = 10  # in minutes
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -56,10 +65,22 @@ class Util():
     COLOR_NEUTRAL_5 = "#ECF0F1"
     COLOR_TRANSPARENT = "transparent"
     CORNER_RADIUS = 15
+    CURRENT_FRAME = ""
+    CARD_FORM = ""
 
     if OS == "Linux":
-        APP_WIDTH = 800
-        APP_HEIGHT = 400
+        if not (platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64"):
+            APP_WIDTH = 960
+            APP_HEIGHT = 720
+
+        if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
+            APP_WIDTH = 800
+            APP_HEIGHT = 400
+            pn532 = Pn532_i2c()
+            pn532.SAMconfigure()
+            READER = Mifare()
+            READER_STATUS = False
+
         FONT = DotDict({
             "Light": "Cantarell Thin",
             "Regular": "Cantarell",
@@ -93,28 +114,64 @@ class Util():
 
     @staticmethod
     def pingServer():
-        print("Try Connect To Server for Updating Gateway Online Time....")
-        gatewayInfo = Gateway.select().dicts()
-        online = requests.post(
-            f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
-        if (online.status_code == 200):  # jika perangkat masih online, maka redirect
-            print("Success Update Gateway Online Time")
+        logger = setup_logging()
+        # nodeShortId = None
+        try:
+            print("----- Ctrl C to stop ping daemon -----")
+            print("Try Connect To Server for Updating Gateway Online Time")
+            gatewayInfo = Gateway.select().dicts()
+            online = requests.post(
+                f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
+            if (online.status_code == 200):  # jika perangkat masih online, maka redirect
+                print("Success Update Gateway Online Time")
 
-        nodes = Node.select().dicts()
+            nodes = Node.select().dicts()
 
-        for node in nodes:
-            nodeShortId = node["shortId"]
-            nodeAccumulativeResponseTime = Variable.getLog(nodeShortId)
-            print(
-                f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
-            nodeOnline = requests.post(
-                f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
-                    "duid": nodeShortId,
-                    "responsesTime": nodeAccumulativeResponseTime
-                })
-            if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
-                print(f"Success Update Node {nodeShortId} Online Time")
-                Variable.reSetLog(nodeShortId)  # reset log for spesific node
+            for node in nodes:
+                global nodeShortId
+                nodeShortId = node["shortId"]
+                nodeAccumulativeResponseTime = Variable.getResponseTimeLog(
+                    nodeShortId)
+
+                print(
+                    f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
+                logger.info(
+                    f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} Online Time.")
+                nodeOnline = requests.post(
+                    f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
+                        "duid": nodeShortId,
+                        "lastOnline": node["lastOnline"] if node["lastOnline"] != None else None,
+                        "responsesTime": nodeAccumulativeResponseTime if nodeAccumulativeResponseTime != None else ""
+                    })
+                if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
+                    print(f"Success Update Node {nodeShortId} Online Time")
+                    # reset log for spesific node
+                    Variable.reSetResponseTimeLog(nodeShortId)
+                    logger.info(
+                        f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} Online Time")
+
+                historys = Variable.getAuthenticationResponseLog(nodeShortId)
+                if (not (historys == None or len(historys) == 0)):
+                    print(
+                        f"Try Connect To Server for Updating Node {nodeShortId} History....")
+                    logger.info(
+                        f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} History")
+                    bulkNodeOnline = requests.post(
+                        f"{Util.URL}/api/v1/gateway/device/h/history/bulk", headers=header, json={
+                            "historys": historys,
+                        })
+                    if (bulkNodeOnline.status_code == 200):
+                        print(
+                            f"Success Update Node {nodeShortId} History (Bulk)")
+                        Variable.reSetAuthenticationResponseLog(
+                            nodeShortId)  # reset log for spesific node
+                        logger.info(
+                            f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} History (Bulk)")
+
+        except:
+            print("Failed connect to server")
+            logger.error(
+                f"[MAIN] - PING_DAEMON - failed connect to server, data buffer to log")
 
     @staticmethod
     def frameDestroyer(fr):
@@ -143,7 +200,7 @@ class Util():
             subprocess.call(f"start /wait python {pythonScript}", shell=True)
 
         if platform.system() == "Linux":
-            subprocess.Popen(
+            subprocess.call(
                 f"lxterminal -e 'bash -c \"source ./venv/bin/activate && python {pythonScript}; exec bash\"'", shell=True)
 
     @staticmethod
@@ -190,10 +247,10 @@ class LoginFrames(customtkinter.CTkFrame):
     def fetchLogin(self):
         username = self.usernameForm.get()
         paasword = self.passwordForm.get()
-        resp = requests.post(f"{Util.URL}/api/v1/user/login",
-                             json={'username': username, 'password': paasword})
+        self.resp = requests.post(f"{Util.URL}/api/v1/gateway/device/h/login",
+                                  json={'username': username, 'password': paasword}, headers=header)
 
-        if (resp.status_code == 200):
+        if (self.resp.status_code == 200):
             data = []
             datas = Gateway.select().dicts()
 
@@ -226,9 +283,10 @@ class LoginFrames(customtkinter.CTkFrame):
                     if (gatewayResp.status_code == 200):
                         self.redirectPage()
 
-        if (resp.status_code != 200):
+        if (self.resp.status_code != 200):
+            self.respError = self.resp.json()
             Toast(master=self.master, color=Util.COLOR_RED_1,
-                  errMsg="Username and Password Not Match")
+                  errMsg=self.respError["data"]["errors"])
 
     def initializeGateway(self):
         gatewayResp = requests.post(
@@ -311,8 +369,8 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, width=120, **kwargs)
         self.stopEvent = Event()
-        # self.t = Timer(30*60, self.autoLogout, ())
-        # self.t.start()
+        self.t = Timer(30*60, self.autoLogout, ())
+        self.t.start()
 
         self.master = master
         master.grid_rowconfigure(0, weight=1)  # configure grid system
@@ -362,9 +420,13 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
             child.configure(fg_color="transparent")
         item.configure(fg_color=Util.COLOR_BLUE_1)
         state = item.cget("text")
-        # self.t.cancel()
-        # self.t = Timer(15, self.autoLogout, ())
-        # self.t.start()
+
+        self.t.cancel()
+        self.t = Timer(30*60, self.autoLogout, ())
+        self.t.start()
+
+        Util.CURRENT_FRAME = state
+
         if state == "Home":
             print(" [!main]: Render Home Frame")
             Util.frameSwitcher(originFrame=self.master.winfo_children()[
@@ -404,7 +466,7 @@ class SideBarFrames(customtkinter.CTkScrollableFrame):
         self.logoutRedirect()
 
     def logoutRedirect(self):
-        # self.t.cancel()
+        self.t.cancel()
         Util.frameSwitcher(originFrame=self.master.winfo_children()[
             1], destinationFrame=LoginFrames, master=self.master, row=0, column=1, padx=[0, 20], pady=20, fg_color=Util.COLOR_TRANSPARENT)
         Util.frameDestroyer(self.master.winfo_children()[0])
@@ -597,8 +659,16 @@ class RoomFrames(customtkinter.CTkFrame):
             respData = resp.json()
             Node.create(shortId=respData["data"]["device_id"])
             self.itemContainer(respData["data"]["device_id"])
-            os.kill(Variable.syncPid(), SIGINT)
-            self.threadSync()
+            statusPid = psutil.pid_exists(Variable.syncPid())
+            if (not statusPid):
+                # If service not active start it
+                syncThread = Thread(target=self.startSync)
+                syncThread.start()
+            if (statusPid):
+                # If service active restart it
+                os.kill(Variable.syncPid(), SIGINT)
+                syncThread = Thread(target=self.startSync)
+                syncThread.start()
 
         if (resp.status_code != 200):
             Toast(master=self.master, color=Util.COLOR_RED_1,
@@ -639,17 +709,16 @@ class RoomFrames(customtkinter.CTkFrame):
         for card in cards:
             self.cardDetailTemplate(card.cardId)
 
-    def threadSync(self):
-        syncThread = Thread(target=self.startSync)
-        syncThread.start()
-
     def startSync(self):
-        print(" [!main]: Start Sync")
-        if platform.system() == "Windows":
-            subprocess.call('start /wait python ./amqp.py', shell=True)
+        Util.startScript("./amqp.py")
 
-        if platform.system() == "Linux":
-            pass
+    # def startSync(self):
+    #     print(" [!main]: Start Sync")
+    #     if platform.system() == "Windows":
+    #         subprocess.call('start /wait python ./amqp.py', shell=True)
+
+    #     if platform.system() == "Linux":
+    #         pass
 
 
 class NetworkFrames(customtkinter.CTkFrame):
@@ -1015,11 +1084,16 @@ class CardFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        cardReadingProcess = Thread(target=self.cardReading)
-        cardReadingProcess.daemon = True
-        cardReadingProcess.start()
+        if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
+            if Util.READER_STATUS == False:
+                # if True:
+                print("starting reader")
+                Util.READER_STATUS = True
+                cardReadingProcess = Thread(target=self.cardReading)
+                cardReadingProcess.daemon = True
+                cardReadingProcess.start()
 
-        self.credentialFrame = customtkinter.CTkFrame(
+        self.credentialFrame = customtkinter.CTkScrollableFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
         self.credentialFrame.grid(
             row=0, column=0, sticky="nswe", padx=[0, 20])
@@ -1056,6 +1130,11 @@ class CardFrames(customtkinter.CTkFrame):
                                                     hover_color=Util.COLOR_GREEN_2, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), command=self.saveOnClick)
         self.submitButton.pack(anchor="w", padx=[20, 20], pady=10, fill="both")
 
+        self.clearButton = customtkinter.CTkButton(master=self.credentialFrame, width=350, height=45, text="Clear", fg_color=Util.COLOR_RED_2,
+                                                   hover_color=Util.COLOR_RED_1, corner_radius=Util.CORNER_RADIUS, font=(Util.FONT.Bold, Util.FONT.SIZE.Regular), command=self.clearOnClick)
+        self.clearButton.pack(anchor="w", padx=[20, 20], pady=[
+                              0, 10], fill="both")
+
         self.aboutFrame = customtkinter.CTkFrame(
             master=self, fg_color=Util.COLOR_NEUTRAL_1, corner_radius=Util.CORNER_RADIUS, width=400)
         self.aboutFrame.grid(
@@ -1064,12 +1143,16 @@ class CardFrames(customtkinter.CTkFrame):
             master=self.aboutFrame, text_color=Util.COLOR_NEUTRAL_5, text="Instruction", font=(Util.FONT.Bold, Util.FONT.SIZE.Large), pady=0, anchor="w", width=350)
         self.aboutLabel.pack(anchor="w", fill="both",
                              padx=[20, 20], pady=10)
+        if not (platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64"):
+            self.information(
+                "THIS FUNCTION WILL NOT RUN ON YOUR DEVICE. THIS FUNCTION ONLY RUN ON RASPBERRY PI HARDWARE")
         self.information("1. Please tap your card on RFID Reader")
         self.information(
             "2. If you want activate two step authentication, please fill PIN form")
         self.information(
             "3. If you want pair card with user please provide username")
         self.information("4. Save Your Data")
+        Util.CARD_FORM = self.cardIdForm
 
     def information(self, text):
         self.informationLabel = customtkinter.CTkLabel(
@@ -1078,21 +1161,60 @@ class CardFrames(customtkinter.CTkFrame):
                                    padx=[20, 20], pady=0)
 
     def saveOnClick(self):
-        pass
+        self.username = self.cardOwnerForm.get()
+        self.cardNumber = Util.CARD_FORM.get()
+        self.pin = self.cardPinForm.get()
+        print("USERNAME:", self.username)
+        print("PIN:", self.pin)
+        print("ID:", self.cardNumber)
+        self.registerResp = requests.post(
+            f"{Util.URL}/api/v1/gateway/device/h/register-card", headers=header, json={'username': self.username, 'cardNumber': self.cardNumber, 'pin': self.pin})
+        print("HTTP CODE", self.registerResp.status_code)
+        # print("HTTP DATA", self.registerResp.json())
+        if self.registerResp.status_code == 200:
+            Toast(master=self.master, color=Util.COLOR_GREEN_1,
+                  errMsg="Success Register New Card")
+
+        if self.registerResp.status_code != 200:
+            self.registerRespData = self.registerResp.json()
+            Toast(master=self.master, color=Util.COLOR_RED_1,
+                  errMsg=self.registerRespData["data"]["errors"])
+
+    def clearOnClick(self):
+        self.cardOwnerForm.delete(0, customtkinter.END)
+        self.cardOwnerForm.configure(
+            placeholder_text="Optional to proivde card owner (username)")
+        Util.CARD_FORM.configure(state="normal")
+        Util.CARD_FORM.delete(0, customtkinter.END)
+        Util.CARD_FORM.configure(
+            placeholder_text="Card ID will appear here when card detected")
+        Util.CARD_FORM.configure(state="disable")
+        self.cardPinForm.delete(0, customtkinter.END)
+        self.cardPinForm.configure(
+            placeholder_text="Optional to proivde card pin")
 
     def cardReading(self):
-        no = 0
-        while True:
-            # Dummy code, change with rfid in RPI
-            print("Try read RFID")
-            if (no == 50):
-                self.cardIdForm.configure(state="normal")
-                self.cardIdForm.configure(placeholder_text="aa")
-                self.cardIdForm.configure(state="disable")
-                print("CARD FOUND")
+        while True and platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
+            try:
+                id = Util.READER.scan_field()
+                id_hex = binascii.hexlify(id).decode()
+                # print("HEX", id_hex)
+                Util.CARD_FORM.configure(state="normal")
+                Util.CARD_FORM.delete(0, customtkinter.END)
+                Util.CARD_FORM.insert(0, id_hex)
+                Util.CARD_FORM.configure(state="disable")
 
-            time.sleep(0.1)
-            no += 1
+            except:
+                # print("restarting")
+                GPIO.cleanup()
+                break
+            finally:
+                GPIO.cleanup()
+
+        # print("waking up rfid again")
+        cardReadingProcess = Thread(target=self.cardReading)
+        cardReadingProcess.daemon = True
+        cardReadingProcess.start()
 
 
 class Toast(customtkinter.CTkFrame):
@@ -1146,20 +1268,22 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        self.cancelPingDaeomon = SetInterval(25*60, Util.pingServer)
+        self.cancelPingDaeomon = SetInterval(
+            Util.PING_INTERVAL * 60, Util.pingServer)
         loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
         loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
         # self.sideBarFrame = SideBarFrames(
-        #     master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
+        #    master=self, fg_color=Util.COLOR_NEUTRAL_2, corner_radius=Util.CORNER_RADIUS)
         # self.sideBarFrame.grid(row=0, column=0, padx=[
-        #                        20, 0], pady=20, sticky="nwsw")
+        #                       20, 0], pady=20, sticky="nwsw")
 
 
 if __name__ == "__main__":
     app = App()
     mainApp = Thread(target=app.mainloop())
     mainApp.start()
-    print("Try to cancel ping")
+    print("Ctrl C to cancel ping daemon")
+    # print("Try to cancel ping")
     # for development, when app close system stop pinging server
-    app.cancelPingDaeomon.cancel()
+    # app.cancelPingDaeomon.cancel() #if this line of code uncomment, ping daemon will stop when main app stop, it is recommended to comment this line of code

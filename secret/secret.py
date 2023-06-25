@@ -7,6 +7,13 @@ load_dotenv()
 datas = Credential.select().dicts()
 API_ID = ""
 API_KEY = ""
+HOST = os.getenv("HOST")
+HTTP_SERVER = f"http://{HOST}:8000"
+AMQP_HOST = os.getenv("AMQP_HOST")
+AMQP_PORT = os.getenv("AMQP_PORT")
+AMQP_USER = os.getenv("AMQP_USER")
+AMQP_PASSWORD = os.getenv("AMQP_PASSWORD")
+
 
 if (len(datas)):
     API_ID = datas[0]["apiID"]

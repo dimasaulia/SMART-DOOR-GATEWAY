@@ -4,20 +4,26 @@ import os
 from datetime import datetime
 from database.scheme import Gateway, Node, Card, AccessRole
 from variable import *
+from logHandler import setup_logging
+from secret.secret import AMQP_PASSWORD, AMQP_HOST, AMQP_PORT, AMQP_USER
+# SETUP LOGGER
+logger = setup_logging()
+
+
 # GET INFO ABOUT DEVICE
 availableGateway = Gateway.get_by_id(1)
 gatewayShortId = availableGateway.shortId
 
 RABIT_SETTINGS = {
     "protocol": "amqp",
-    "hostname": "192.168.155.184",
-    "port": 5672,
+    "hostname": AMQP_HOST,
+    "port": int(AMQP_PORT),
     "vhost": "0.0.0.0",
     "exchange": "smartdoor",
     "queues": ["smartdoorgateway-"],
 }
 
-credential = pika.PlainCredentials("smartdoor", "t4np454nd1")
+credential = pika.PlainCredentials(AMQP_USER, AMQP_PASSWORD)
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(RABIT_SETTINGS["hostname"], RABIT_SETTINGS["port"], "0.0.0.0", credential))
 
@@ -27,13 +33,13 @@ channel.exchange_declare(
     exchange=f"{RABIT_SETTINGS['exchange']}", exchange_type='direct')
 
 result = channel.queue_declare(
-    f"{RABIT_SETTINGS['queues'][0]}{gatewayShortId}", exclusive=False, durable=True)
+    queue=f"{RABIT_SETTINGS['queues'][0]}-{gatewayShortId}", exclusive=False, durable=True)
 queue_name = result.method.queue
 
 print(' [*amqp]: Waiting for logs. To exit press CTRL+C ')
 print(f" [!amqp]: PID={os.getpid()}")
 Variable.setSyncPid(os.getpid())
-
+print(gatewayShortId)
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
                    queue=queue_name, routing_key=f"setup/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
@@ -56,8 +62,11 @@ devices = []
 
 
 def callback(ch, method, properties, body):
-    action = method.routing_key.split(".")[0]
+    action = method.routing_key.split("/")[0]
     payloadObj = json.loads(body)
+
+    logger.info(
+        f"[AMQP] - {str(action).capitalize()} - {json.dumps(payloadObj)}")
 
     if action == "addcard":
         print(" [!amqp]: NEW CARD HAS BEEND ADDED")
