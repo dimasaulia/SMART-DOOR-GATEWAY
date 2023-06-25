@@ -69,7 +69,7 @@ class Util():
     
     if OS == "Linux":
         if not(platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64"): 
-            APP_WIDTH = 1280
+            APP_WIDTH = 960
             APP_HEIGHT = 720
 
         if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
@@ -651,8 +651,16 @@ class RoomFrames(customtkinter.CTkFrame):
             respData = resp.json()
             Node.create(shortId=respData["data"]["device_id"])
             self.itemContainer(respData["data"]["device_id"])
-            os.kill(Variable.syncPid(), SIGINT)
-            self.threadSync()
+            statusPid = psutil.pid_exists(Variable.syncPid())
+            if (not statusPid):
+                # If service not active start it
+                syncThread = Thread(target=self.startSync)
+                syncThread.start()
+            if (statusPid):
+                # If service active restart it
+                os.kill(Variable.syncPid(), SIGINT)
+                syncThread = Thread(target=self.startSync)
+                syncThread.start()
 
         if (resp.status_code != 200):
             Toast(master=self.master, color=Util.COLOR_RED_1,
@@ -693,17 +701,17 @@ class RoomFrames(customtkinter.CTkFrame):
         for card in cards:
             self.cardDetailTemplate(card.cardId)
 
-    def threadSync(self):
-        syncThread = Thread(target=self.startSync)
-        syncThread.start()
-
     def startSync(self):
-        print(" [!main]: Start Sync")
-        if platform.system() == "Windows":
-            subprocess.call('start /wait python ./amqp.py', shell=True)
+        Util.startScript("./amqp.py")
 
-        if platform.system() == "Linux":
-            pass
+
+    # def startSync(self):
+    #     print(" [!main]: Start Sync")
+    #     if platform.system() == "Windows":
+    #         subprocess.call('start /wait python ./amqp.py', shell=True)
+
+    #     if platform.system() == "Linux":
+    #         pass
 
 
 class NetworkFrames(customtkinter.CTkFrame):

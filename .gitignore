@@ -1,3 +1,10 @@
 secret/.env
-# database/gateway.db
+secret/__pycache__
+database/gateway.db
+database/__pycache__
 env
+venv
+log_file.txt
+./log_file.txt
+__pycache__
+.vscode

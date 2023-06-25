@@ -33,36 +33,36 @@ channel.exchange_declare(
     exchange=RABIT_SETTINGS["exchange"], exchange_type='direct')
 
 result = channel.queue_declare(
-    RABIT_SETTINGS["queues"][0], exclusive=False, durable=True)
+    queue=f"{RABIT_SETTINGS['queues'][0]}-{gatewayShortId}", exclusive=False, durable=True)
 queue_name = result.method.queue
 
 print(' [*amqp]: Waiting for logs. To exit press CTRL+C ')
 print(f" [!amqp]: PID={os.getpid()}")
 Variable.setSyncPid(os.getpid())
-
+print(gatewayShortId)
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
-                   queue=queue_name, routing_key=f"setup.{gatewayShortId}.gateway")
+                   queue=queue_name, routing_key=f"setup/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
-                   queue=queue_name, routing_key=f"reset.{gatewayShortId}.gateway")
+                   queue=queue_name, routing_key=f"reset/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"setuproom.{gatewayShortId}.gateway")
+                   routing_key=f"setuproom/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"resetroom.{gatewayShortId}.gateway")
+                   routing_key=f"resetroom/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"removeroom.{gatewayShortId}.gateway")
+                   routing_key=f"removeroom/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"],
-                   queue=queue_name, routing_key=f"addcard.{gatewayShortId}.gateway")
+                   queue=queue_name, routing_key=f"addcard/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"removecard.{gatewayShortId}.gateway")
+                   routing_key=f"removecard/{gatewayShortId}/gateway")
 channel.queue_bind(exchange=RABIT_SETTINGS["exchange"], queue=queue_name,
-                   routing_key=f"updatecard.{gatewayShortId}.gateway")
+                   routing_key=f"updatecard/{gatewayShortId}/gateway")
 
 node_DB = Node.select().dicts()
 devices = []
 
 
 def callback(ch, method, properties, body):
-    action = method.routing_key.split(".")[0]
+    action = method.routing_key.split("/")[0]
     payloadObj = json.loads(body)
 
     logger.info(f"[AMQP] - {str(action).capitalize()} - {json.dumps(payloadObj)}")
@@ -126,6 +126,6 @@ def callback(ch, method, properties, body):
 
 
 channel.basic_consume(
-    queue=RABIT_SETTINGS["queues"][0], on_message_callback=callback, auto_ack=True)
+    queue=queue_name, on_message_callback=callback, auto_ack=True)
 
 channel.start_consuming()
