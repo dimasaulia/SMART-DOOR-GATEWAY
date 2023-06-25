@@ -3,4 +3,5 @@ secret/__pycache__
 database/gateway.db
 database/__pycache__
 env
+venv
 log_file.txt
