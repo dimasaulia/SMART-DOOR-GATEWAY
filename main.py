@@ -569,6 +569,7 @@ class RoomFrames(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
+        self.db_offset = 0
 
         # DEVICE LIST
         self.deviceListFrame = customtkinter.CTkScrollableFrame(
@@ -608,6 +609,7 @@ class RoomFrames(customtkinter.CTkFrame):
         self.cardLabel = customtkinter.CTkLabel(
             master=self.cardFrame, text_color=Util.COLOR_NEUTRAL_5, text="Accaptable Card", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.cardLabel.pack(anchor="w")
+        print("device card", self.db_offset)
 
     def itemContainer(self, title):
         self.nodeItemContainer = customtkinter.CTkFrame(
@@ -697,9 +699,11 @@ class RoomFrames(customtkinter.CTkFrame):
         self.roomDetailTemplate("Room Name", nodeName)
         self.roomDetailTemplate("Last Online", lastOnline)
 
-        cards = Card.select().join(AccessRole).join(Node).where(Node.shortId == nodeID)
+        cards = Card.select().join(AccessRole).join(Node).where(Node.shortId == nodeID).limit(20)
         for card in cards:
             self.cardDetailTemplate(card.cardId)
+            self.db_offset += 1
+        print(self.db_offset)
 
     def startSync(self):
         Util.startScript("./amqp.py")
