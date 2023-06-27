@@ -1,6 +1,9 @@
 import pika
 import json
 import os
+import psutil
+import platform
+import subprocess
 from datetime import datetime
 from database.scheme import Gateway, Node, Card, AccessRole
 from variable import *
@@ -65,7 +68,25 @@ def callback(ch, method, properties, body):
     action = method.routing_key.split("/")[0]
     payloadObj = json.loads(body)
 
-    logger.info(f"[AMQP] - {str(action).capitalize()} - {json.dumps(payloadObj)}")
+    #SYSTEM INFO
+    # Get CPU usage as a percentage
+    cpu_usage = psutil.cpu_percent()
+    # Get RAM information
+    ram = psutil.virtual_memory()
+    ram_total = ram.total
+    ram_used = ram.used
+    ram_percent = ram.percent
+    # Get disk usage
+    disk = psutil.disk_usage('/')
+    disk_total = disk.total
+    disk_used = disk.used
+    disk_percent = disk.percent
+    # Get CPU temperature
+    cpu_temp = subprocess.check_output("vcgencmd measure_temp", shell=True)
+    cpu_temp = cpu_temp.decode('utf-8')
+    system_info = f"CPU usage: {cpu_usage}, RAM Total: {ram_total}, RAM Used: {ram_used}, Disk total: {disk_total}, Disk Used: {disk_used} ({disk_percent})%, CPU Temp: {cpu_temp}" 
+
+    logger.info(f"[AMQP] - {str(action).capitalize()} - {json.dumps(payloadObj)} - {system_info}")
 
     if action == "addcard":
         print(" [!amqp]: NEW CARD HAS BEEND ADDED")
