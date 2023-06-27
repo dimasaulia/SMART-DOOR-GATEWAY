@@ -1,1 +1,5 @@
-{"syncpid": 11852, "networkCredential": "", "authenticationDaemon": {"COM3": 31184}}
+{
+    "syncpid": 11852,
+    "networkCredential": "",
+    "authenticationDaemon": { "COM3": 31184 }
+}
