@@ -617,7 +617,6 @@ class RoomFrames(customtkinter.CTkFrame):
         self.cardLabel = customtkinter.CTkLabel(
             master=self.cardFrame, text_color=Util.COLOR_NEUTRAL_5, text="Accaptable Card", font=(Util.FONT.SemiBold, Util.FONT.SIZE.Large))
         self.cardLabel.pack(anchor="w")
-        print("device card", self.db_offset)
 
     def itemContainer(self, title):
         self.nodeItemContainer = customtkinter.CTkFrame(
@@ -690,6 +689,8 @@ class RoomFrames(customtkinter.CTkFrame):
         nodeID = node_DB.shortId
         nodeName = node_DB.buildingName if node_DB.buildingName != None else "Not Link"
         lastOnline = ""
+        acceptableCard = Card.select().join(AccessRole).join(
+            Node).where(Node.shortId == nodeID).count()
         if node_DB.lastOnline != None:
             # execpetion for linux
             try:
@@ -705,13 +706,14 @@ class RoomFrames(customtkinter.CTkFrame):
 
         self.roomDetailTemplate("Room ID", nodeID)
         self.roomDetailTemplate("Room Name", nodeName)
+        self.roomDetailTemplate("Acceptable Card", acceptableCard)
         self.roomDetailTemplate("Last Online", lastOnline)
 
-        cards = Card.select().join(AccessRole).join(Node).where(Node.shortId == nodeID).limit(20)
+        cards = Card.select().join(AccessRole).join(
+            Node).where(Node.shortId == nodeID).limit(20)
         for card in cards:
             self.cardDetailTemplate(card.cardId)
             self.db_offset += 1
-        print(self.db_offset)
 
     def startSync(self):
         Util.startScript("./amqp.py")
