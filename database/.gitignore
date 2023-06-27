@@ -1,2 +1,3 @@
 gateway.db
+*.db
 __pycache__
