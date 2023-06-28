@@ -127,7 +127,7 @@ class Util():
 
                 # jika perangkat masih online, maka lakukan pengecekan lanjutan
                 if (online.status_code == 200):
-                    Util.PING_INTERVAL = 2.5
+                    Util.PING_INTERVAL = 10
                     print("Success Update Gateway Online Time")
                     print("Checking AMQP Service")
                     statusPid = psutil.pid_exists(Variable.syncPid())
@@ -189,7 +189,7 @@ class Util():
 
             except:
                 print("Failed connect to server, reduceing ping time")
-                Util.PING_INTERVAL = 0.25
+                Util.PING_INTERVAL = 5
 
                 logger.error(
                     f"[MAIN] - PING_DAEMON - failed connect to server, reduceing pin time, data buffer to log")
