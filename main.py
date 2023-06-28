@@ -49,7 +49,7 @@ class Util():
 
     OS = platform.system()
     URL = HTTP_SERVER
-    PING_INTERVAL = 1  # in minutes
+    PING_INTERVAL = 10  # in minutes
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -127,7 +127,7 @@ class Util():
 
                 # jika perangkat masih online, maka lakukan pengecekan lanjutan
                 if (online.status_code == 200):
-                    Util.PING_INTERVAL = 1
+                    Util.PING_INTERVAL = 2.5
                     print("Success Update Gateway Online Time")
                     print("Checking AMQP Service")
                     statusPid = psutil.pid_exists(Variable.syncPid())
