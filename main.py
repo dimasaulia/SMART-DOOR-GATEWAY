@@ -49,7 +49,7 @@ class Util():
 
     OS = platform.system()
     URL = HTTP_SERVER
-    PING_INTERVAL = 10  # in minutes
+    PING_INTERVAL = 1  # in minutes
     COLOR_BLUE_1 = "#1481B8"
     COLOR_BLUE_2 = "#26AEF3"
     COLOR_RED_1 = "#FF5E5E"
@@ -116,62 +116,84 @@ class Util():
     def pingServer():
         logger = setup_logging()
         # nodeShortId = None
-        try:
-            print("----- Ctrl C to stop ping daemon -----")
-            print("Try Connect To Server for Updating Gateway Online Time")
-            gatewayInfo = Gateway.select().dicts()
-            online = requests.post(
-                f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
-            if (online.status_code == 200):  # jika perangkat masih online, maka redirect
-                print("Success Update Gateway Online Time")
-
-            nodes = Node.select().dicts()
-
-            for node in nodes:
-                global nodeShortId
-                nodeShortId = node["shortId"]
-                nodeAccumulativeResponseTime = Variable.getResponseTimeLog(
-                    nodeShortId)
-
+        while True:
+            try:
+                print("----- Ctrl C to stop ping daemon -----")
                 print(
-                    f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
-                logger.info(
-                    f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} Online Time.")
-                nodeOnline = requests.post(
-                    f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
-                        "duid": nodeShortId,
-                        "lastOnline": node["lastOnline"] if node["lastOnline"] != None else None,
-                        "responsesTime": nodeAccumulativeResponseTime if nodeAccumulativeResponseTime != None else ""
-                    })
-                if (nodeOnline.status_code == 200):  # jika perangkat masih online, maka redirect
-                    print(f"Success Update Node {nodeShortId} Online Time")
-                    # reset log for spesific node
-                    Variable.reSetResponseTimeLog(nodeShortId)
-                    logger.info(
-                        f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} Online Time")
+                    f"Try Connect To Server for Updating Gateway Online Time, ping interval: {Util.PING_INTERVAL}")
+                gatewayInfo = Gateway.select().dicts()
+                online = requests.post(
+                    f"{Util.URL}/api/v1/gateway/device/h/update-online-time/{gatewayInfo[0]['shortId']}", headers=header)
 
-                historys = Variable.getAuthenticationResponseLog(nodeShortId)
-                if (not (historys == None or len(historys) == 0)):
-                    print(
-                        f"Try Connect To Server for Updating Node {nodeShortId} History....")
-                    logger.info(
-                        f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} History")
-                    bulkNodeOnline = requests.post(
-                        f"{Util.URL}/api/v1/gateway/device/h/history/bulk", headers=header, json={
-                            "historys": historys,
-                        })
-                    if (bulkNodeOnline.status_code == 200):
+                # jika perangkat masih online, maka lakukan pengecekan lanjutan
+                if (online.status_code == 200):
+                    Util.PING_INTERVAL = 1
+                    print("Success Update Gateway Online Time")
+                    print("Checking AMQP Service")
+                    statusPid = psutil.pid_exists(Variable.syncPid())
+                    if (not statusPid):
+                        print("AMQP Stop, try to waking up service")
+                        logger.error(
+                            "[AMQP] - AMQP Stop, try to waking up service")
+                        time.sleep(15)
+                        Util.startScript("./amqp.py")
+                    if (statusPid):
+                        print("AMQP Still running")
+                        logger.error("[AMQP] - AMQP Still running")
+
+                    nodes = Node.select().dicts()
+
+                    for node in nodes:
+                        global nodeShortId
+                        nodeShortId = node["shortId"]
+                        nodeAccumulativeResponseTime = Variable.getResponseTimeLog(
+                            nodeShortId)
+
                         print(
-                            f"Success Update Node {nodeShortId} History (Bulk)")
-                        Variable.reSetAuthenticationResponseLog(
-                            nodeShortId)  # reset log for spesific node
+                            f"Try Connect To Server for Updating Node {nodeShortId} Online Time....")
                         logger.info(
-                            f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} History (Bulk)")
+                            f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} Online Time.")
+                        nodeOnline = requests.post(
+                            f"{Util.URL}/api/v1/gateway/device/h/node-online-update", headers=header, json={
+                                "duid": nodeShortId,
+                                "lastOnline": node["lastOnline"] if node["lastOnline"] != None else None,
+                                "responsesTime": nodeAccumulativeResponseTime if nodeAccumulativeResponseTime != None else ""
+                            })
+                        # jika perangkat masih online, maka redirect
+                        if (nodeOnline.status_code == 200):
+                            print(
+                                f"Success Update Node {nodeShortId} Online Time")
+                            # reset log for spesific node
+                            Variable.reSetResponseTimeLog(nodeShortId)
+                            logger.info(
+                                f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} Online Time")
 
-        except:
-            print("Failed connect to server")
-            logger.error(
-                f"[MAIN] - PING_DAEMON - failed connect to server, data buffer to log")
+                        historys = Variable.getAuthenticationResponseLog(
+                            nodeShortId)
+                        if (not (historys == None or len(historys) == 0)):
+                            print(
+                                f"Try Connect To Server for Updating Node {nodeShortId} History....")
+                            logger.info(
+                                f"[MAIN] - PING_DAEMON - Try Connect To Server for Updating Node {nodeShortId} History")
+                            bulkNodeOnline = requests.post(
+                                f"{Util.URL}/api/v1/gateway/device/h/history/bulk", headers=header, json={
+                                    "historys": historys,
+                                })
+                            if (bulkNodeOnline.status_code == 200):
+                                print(
+                                    f"Success Update Node {nodeShortId} History (Bulk)")
+                                Variable.reSetAuthenticationResponseLog(
+                                    nodeShortId)  # reset log for spesific node
+                                logger.info(
+                                    f"[MAIN] - PING_DAEMON - Success Update Node {nodeShortId} History (Bulk)")
+
+            except:
+                print("Failed connect to server, reduceing ping time")
+                Util.PING_INTERVAL = 0.25
+
+                logger.error(
+                    f"[MAIN] - PING_DAEMON - failed connect to server, reduceing pin time, data buffer to log")
+            time.sleep(Util.PING_INTERVAL * 60)  # in minutes
 
     @staticmethod
     def frameDestroyer(fr):
@@ -1274,8 +1296,10 @@ class App(customtkinter.CTk):
         self.minsize(Util.APP_WIDTH, Util.APP_HEIGHT)
         self.grid_propagate(False)
         self.configure(fg_color=Util.COLOR_NEUTRAL_3)
-        self.cancelPingDaeomon = SetInterval(
-            Util.PING_INTERVAL * 60, Util.pingServer)
+        # self.cancelPingDaeomon = SetInterval(
+        #     Util.PING_INTERVAL * 60, Util.pingServer)
+        thread = Thread(target=Util.pingServer)
+        thread.start()
         loginFrame = LoginFrames(master=self, fg_color=Util.COLOR_TRANSPARENT)
         loginFrame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
