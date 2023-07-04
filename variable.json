@@ -1,1 +1,5 @@
-{"syncpid": 23868, "networkCredential": {"COM3": {"SSID": "MN-GATEWAY-WomyF-1", "PASSWORD": "wlnexfsu", "GATEWAY": "GATEWAY-WomyF"}}, "authenticationDaemon": {"COM3": 28616}}
+{
+    "syncpid": 1446278,
+    "networkCredential": "",
+    "authenticationDaemon": { "COM3": 31184, "/dev/ttyUSB0": 54849 }
+}
