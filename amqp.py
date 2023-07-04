@@ -33,7 +33,7 @@ connection = pika.BlockingConnection(
 channel = connection.channel()
 
 channel.exchange_declare(
-    exchange=f"{RABIT_SETTINGS['exchange']}", exchange_type='direct')
+    exchange=f"{RABIT_SETTINGS['exchange']}", exchange_type='direct',durable=True)
 
 result = channel.queue_declare(
     queue=f"{RABIT_SETTINGS['queues'][0]}-{gatewayShortId}", exclusive=False, durable=True)
