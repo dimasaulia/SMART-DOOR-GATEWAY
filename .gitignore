@@ -12,3 +12,7 @@ wifi.py
 *.db
 database/gateway.db
 database/*.db
+build
+dist
+*.spec
+*.exe
