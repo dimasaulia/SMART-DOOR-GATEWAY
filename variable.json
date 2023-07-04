@@ -1,5 +1,1 @@
-{
-    "syncpid": 1446278,
-    "networkCredential": "",
-    "authenticationDaemon": { "COM3": 31184, "/dev/ttyUSB0": 54849 }
-}
+{"syncpid": 26468, "networkCredential": "", "authenticationDaemon": {"COM3": 31184, "/dev/ttyUSB0": 54849}}
