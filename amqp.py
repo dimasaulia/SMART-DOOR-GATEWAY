@@ -33,7 +33,7 @@ connection = pika.BlockingConnection(
 channel = connection.channel()
 
 channel.exchange_declare(
-    exchange=f"{RABIT_SETTINGS['exchange']}", exchange_type='direct')
+    exchange=f"{RABIT_SETTINGS['exchange']}", exchange_type='direct', durable=True)
 
 result = channel.queue_declare(
     queue=f"{RABIT_SETTINGS['queues'][0]}-{gatewayShortId}", exclusive=False, durable=True)
@@ -85,9 +85,11 @@ def callback(ch, method, properties, body):
         # Get CPU temperature
         cpu_temp = subprocess.check_output("vcgencmd measure_temp", shell=True)
         cpu_temp = cpu_temp.decode('utf-8')
-        system_info = f"CPU usage: {cpu_usage}, RAM Total: {ram_total}, RAM Used: {ram_used}, Disk total: {disk_total}, Disk Used: {disk_used} ({disk_percent})%, CPU Temp: {cpu_temp}".replace('\n', '')
+        system_info = f"CPU usage: {cpu_usage}, RAM Total: {ram_total}, RAM Used: {ram_used}, Disk total: {disk_total}, Disk Used: {disk_used} ({disk_percent})%, CPU Temp: {cpu_temp}".replace(
+            '\n', '')
 
-        logger.info(f"[AMQP] - {str(action).capitalize()} - {json.dumps(payloadObj)} - {system_info}".replace('\n', ''))
+        logger.info(
+            f"[AMQP] - {str(action).capitalize()} - {json.dumps(payloadObj)} - {system_info}".replace('\n', ''))
 
     if platform.machine() == "AMD64" or platform.machine() == "x86" or platform.machine() == "x86_64" or platform.machine() == "arm64":
         logger.info(
