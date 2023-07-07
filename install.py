@@ -17,6 +17,7 @@ def isDirectoryExist (path):
     else:
         return False
 
+subprocess.call('pip install pyinstaller', shell=True)
 # ACTIVATE THE venv
 if OS == "WINDOWS":
     # Install packages from requirements.txt
@@ -24,7 +25,10 @@ if OS == "WINDOWS":
 
 if OS == "LINUX":
     # Install packages from requirements.txt
-    subprocess.call('pip install -r rpi.txt', shell=True)
+    if(isDirectoryExist("./.venv") == False):
+        subprocess.call('virtualenv venv', shell=True)
+        subprocess.call('source ./venv/bin/activate', shell=True)
+        subprocess.call('./venv/bin/pip install -r rpi.txt', shell=True)
 
 # CHECK DATABASE
 if(isFileExist("./database/gateway.db") == True):
@@ -32,7 +36,7 @@ if(isFileExist("./database/gateway.db") == True):
 
 # IF EMPTY MIGRATE
 if(isFileExist("./database/gateway.db") == False):
-    subprocess.call('python ./database/migrate.py', shell=True)
+    subprocess.call('./venv/bin/python ./database/migrate.py', shell=True)
 
 # CREATE EXECUTEABLE APP
 import PyInstaller.__main__

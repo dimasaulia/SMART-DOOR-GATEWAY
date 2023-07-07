@@ -1,4 +1,9 @@
 import subprocess
+import platform
+OS = str(platform.system()).upper()
 
 if __name__ == '__main__':
-    subprocess.run(['python', 'main.py'])
+    if OS == "WINDOWS":
+        subprocess.run(['python', 'main.py'])
+    if OS == "LINUX":
+        subprocess.run(['venv/bin/python', 'main.py'])
