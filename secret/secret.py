@@ -7,8 +7,10 @@ load_dotenv()
 datas = Credential.select().dicts()
 API_ID = ""
 API_KEY = ""
-HOST = os.getenv("HOST")
-HTTP_SERVER = f"http://{HOST}:8000"
+HTTP_HOST = os.getenv("HTTP_HOST")
+HTTP_PROTOCOL = os.getenv("HTTP_PROTOCOL")
+HTTP_PORT = os.getenv("HTTP_PORT")
+HTTP_SERVER = f"{HTTP_PROTOCOL}://{HTTP_HOST}:{HTTP_PORT}"
 AMQP_HOST = os.getenv("AMQP_HOST")
 AMQP_PORT = os.getenv("AMQP_PORT")
 AMQP_USER = os.getenv("AMQP_USER")
