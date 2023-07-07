@@ -24,7 +24,7 @@ class Node(BaseModel):
 class Card(BaseModel):
     cardId = CharField()
     cardStatus = CharField()
-    pin = CharField()
+    pin = CharField(null = True)
     isTwoStepAuth = BooleanField()
     isBanned = BooleanField()
 
