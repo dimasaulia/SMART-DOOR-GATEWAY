@@ -219,11 +219,10 @@ class Util():
     @staticmethod
     def startScript(pythonScript):
         if platform.system() == "Windows":
-            subprocess.call(f"start /wait python {pythonScript}", shell=True)
+            subprocess.call(f"python {pythonScript}", shell=True)
 
         if platform.system() == "Linux":
-            subprocess.call(
-                f"lxterminal -e 'bash -c \"source ./venv/bin/activate && python {pythonScript}; exec bash\"'", shell=True)
+            subprocess.call(f"venv/bin/python {pythonScript}", shell=True)
 
     @staticmethod
     def stopScript(pid):
