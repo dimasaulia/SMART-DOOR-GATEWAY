@@ -9,6 +9,7 @@ import psutil
 import serial
 import serial.tools.list_ports
 import time
+import sys
 if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
     import RPi.GPIO as GPIO
     from py532lib.i2c import *
@@ -219,7 +220,10 @@ class Util():
     @staticmethod
     def startScript(pythonScript):
         if platform.system() == "Windows":
-            subprocess.call(f"venv/Scripts/python {pythonScript}", shell=True)
+            venv_python = os.path.join(os.path.dirname(__file__), 'venv', 'Scripts', 'python.exe')
+            venv_python = sys.executable
+            command = [venv_python, pythonScript]
+            subprocess.call(command, shell=True)
 
         if platform.system() == "Linux":
             subprocess.call(f"venv/bin/python {pythonScript}", shell=True)
