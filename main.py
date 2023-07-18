@@ -128,11 +128,15 @@ class Util():
                 ram_total = ram.total
                 ram_used = ram.used
                 ram_percent = ram.percent
-                # Get CPU temperature
-                cpu_temp = subprocess.check_output("vcgencmd measure_temp", shell=True)
-                cpu_temp = cpu_temp.decode('utf-8')
-                system_info = f"CPU Usage: {cpu_usage}, CPU Temp: {cpu_temp}, RAM Total: {ram_total}, RAM Used: {ram_used}, RAM Percentage {ram_percent}%".replace('\n', '')
-                logger.info(f"[HWINFO] - {system_info}")
+                if platform.machine() == "armv71" or platform.machine() == "armv61" or platform.machine() == "aarch64":
+                    # Get CPU temperature
+                    cpu_temp = subprocess.check_output("vcgencmd measure_temp", shell=True)
+                    cpu_temp = cpu_temp.decode('utf-8')
+                    system_info = f"CPU Usage: {cpu_usage}, CPU Temp: {cpu_temp}, RAM Total: {ram_total}, RAM Used: {ram_used}, RAM Percentage {ram_percent}%".replace('\n', '')
+                    logger.info(f"[HWINFO] - {system_info}")
+                else:
+                    system_info = f"CPU Usage: {cpu_usage}, RAM Total: {ram_total}, RAM Used: {ram_used}, RAM Percentage {ram_percent}%".replace('\n', '')
+                    logger.info(f"[HWINFO] - {system_info}")
             if Util.OS == "Windows":
                 # Get RAM information
                 ram = psutil.virtual_memory()
