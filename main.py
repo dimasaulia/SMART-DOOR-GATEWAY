@@ -118,6 +118,32 @@ class Util():
         logger = setup_logging()
         # nodeShortId = None
         while True:
+            # LOGGING HARDWARE
+            print("----- Record Hardware Information -----")
+            if Util.OS == "Linux":
+                # Get CPU usage as a percentage
+                cpu_usage = psutil.cpu_percent()
+                # Get RAM information
+                ram = psutil.virtual_memory()
+                ram_total = ram.total
+                ram_used = ram.used
+                ram_percent = ram.percent
+                # Get CPU temperature
+                cpu_temp = subprocess.check_output("vcgencmd measure_temp", shell=True)
+                cpu_temp = cpu_temp.decode('utf-8')
+                system_info = f"CPU Usage: {cpu_usage}, CPU Temp: {cpu_temp}, RAM Total: {ram_total}, RAM Used: {ram_used}, RAM Percentage {ram_percent}%".replace('\n', '')
+                logger.info(f"[HWINFO] - {system_info}")
+            if Util.OS == "Windows":
+                # Get RAM information
+                ram = psutil.virtual_memory()
+                ram_total = ram.total
+                ram_used = ram.used
+                ram_percent = ram.percent
+                # Get CPU Load
+                cpu_usage = psutil.cpu_percent(interval=1)
+                system_info = f"CPU Usage: {cpu_usage}, RAM Total: {ram_total}, RAM Used: {ram_used}, RAM Percentage {ram_percent}%".replace('\n', '')
+                logger.info(f"[HWINFO] - {system_info}")
+            
             try:
                 print("----- Ctrl C to stop ping daemon -----")
                 print(
