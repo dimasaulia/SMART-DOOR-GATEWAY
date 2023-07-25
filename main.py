@@ -253,7 +253,7 @@ class Util():
             venv_python = os.path.join(os.path.dirname(__file__), 'venv', 'Scripts', 'python.exe')
             venv_python = sys.executable
             command = [venv_python, pythonScript]
-            subprocess.call(command, shell=True)
+            subprocess.call(f"{venv_python} {pythonScript}", shell=True)
 
         if platform.system() == "Linux":
             subprocess.call(f"venv/bin/python {pythonScript}", shell=True)
