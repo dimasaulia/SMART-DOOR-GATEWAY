@@ -51,7 +51,9 @@ if(isFileExist("./database/gateway.db") == True):
 if(isFileExist("./database/gateway.db") == False):
     print("INFO: Migrating Dataabse")
     if OS == "WINDOWS":
-        subprocess.run('/venv/Scripts/python ./database/migrate.py', shell=True)
+        venv_python = os.path.join(os.path.dirname(__file__), 'venv', 'Scripts', 'python.exe')
+        venv_python = sys.executable
+        subprocess.run(f'{venv_python} ./database/migrate.py', shell=True)
     if OS == "LINUX":
         subprocess.call('./venv/bin/python ./database/migrate.py', shell=True)
 
