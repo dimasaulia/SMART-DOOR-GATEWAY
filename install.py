@@ -29,8 +29,7 @@ if OS == "WINDOWS":
         print("INFO: Installing All Required Library")
         venv_pip = os.path.join(os.path.dirname(__file__), 'venv', 'Scripts', 'pip.exe')
         requirements_file = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-        venv_python = sys.executable
-        command = [venv_python, venv_pip, 'install', '-r', requirements_file]
+        command = [venv_pip, 'install', '-r', requirements_file]
         subprocess.run(command, shell=True)
 
 if OS == "LINUX":
